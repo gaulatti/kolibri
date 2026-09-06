@@ -29,6 +29,12 @@ node releases/0.1.0/bin/validate.mjs releases/0.1.0 path/to/contract.json
 
 It imports no unpublished Kolibri module.
 
+The [Bleecker toggle-family conformance proof](bleecker-toggle-conformance.md)
+uses this exact release as a black-box external consumer. It pins the complete
+manifest, validates renderer-neutral state/action/accessibility intent, records
+consumer-owned behavior, and includes a deterministic incompatible-version
+failure without modifying this immutable directory.
+
 ## Contract and ordering
 
 Schema `1.0.0` describes component trees, component references, semantic parts,

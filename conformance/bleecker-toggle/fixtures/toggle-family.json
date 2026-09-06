@@ -1,0 +1,104 @@
+{
+  "metadata": {
+    "releaseVersion": "0.1.0",
+    "schemaVersion": "1.0.0",
+    "compatibleSchemaVersions": ">=1.0.0 <2.0.0",
+    "sourceRevision": "24e6905a0a6b9e6dae08b0832781b0f06f8c0b5f"
+  },
+  "components": [
+    {
+      "id": "bleecker-toggle-family",
+      "name": "Toggle",
+      "kind": "atom",
+      "tree": [
+        {
+          "id": "control",
+          "type": "element",
+          "element": "button",
+          "part": "control",
+          "props": {
+            "attributes": {
+              "type": "button",
+              "aria-label": "Bold",
+              "aria-pressed": false,
+              "disabled": false
+            },
+            "variants": {
+              "size": ["sm", "md", "lg"],
+              "variant": ["default", "outline"]
+            },
+            "states": {
+              "pressed": [false, true],
+              "disabled": [false, true]
+            }
+          },
+          "children": [
+            {
+              "id": "icon",
+              "type": "element",
+              "element": "span",
+              "part": "icon",
+              "props": {
+                "assetId": "bold-icon",
+                "attributes": { "aria-hidden": true }
+              }
+            },
+            {
+              "id": "label",
+              "type": "element",
+              "element": "span",
+              "part": "label",
+              "text": "Bold"
+            }
+          ]
+        }
+      ],
+      "behaviors": [
+        {
+          "id": "press-on",
+          "kind": "sequence",
+          "steps": [
+            { "order": 1, "event": "activate-unpressed", "actionId": "set-pressed" },
+            { "order": 2, "event": "activate-unpressed", "actionId": "emit-pressed" }
+          ]
+        },
+        {
+          "id": "press-off",
+          "kind": "sequence",
+          "steps": [
+            { "order": 1, "event": "activate-pressed", "actionId": "clear-pressed" },
+            { "order": 2, "event": "activate-pressed", "actionId": "emit-unpressed" }
+          ]
+        },
+        {
+          "id": "focus-control",
+          "kind": "sequence",
+          "steps": [
+            { "order": 1, "event": "focus-request", "actionId": "focus-control" }
+          ]
+        }
+      ],
+      "events": [
+        { "name": "activate-unpressed" },
+        { "name": "activate-pressed" },
+        { "name": "focus-request" }
+      ],
+      "actions": [
+        { "id": "set-pressed", "type": "set-state", "value": { "field": "pressed", "value": true } },
+        { "id": "emit-pressed", "type": "emit", "value": { "event": "pressed-change", "value": true } },
+        { "id": "clear-pressed", "type": "set-state", "value": { "field": "pressed", "value": false } },
+        { "id": "emit-unpressed", "type": "emit", "value": { "event": "pressed-change", "value": false } },
+        { "id": "focus-control", "type": "focus", "target": "control" }
+      ],
+      "assets": [
+        {
+          "id": "bold-icon",
+          "kind": "icon",
+          "uri": "assets/bold.svg",
+          "integrity": "sha256-SfE9Iehoz4G+PvGyt6YR1rsNJlV3FzTbhNQfQkTqD6g="
+        }
+      ]
+    }
+  ],
+  "entrypoints": ["bleecker-toggle-family"]
+}

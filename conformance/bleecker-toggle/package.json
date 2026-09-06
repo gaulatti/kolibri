@@ -1,0 +1,11 @@
+{
+  "name": "@kolibri/bleecker-toggle-conformance",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "conform": "node src/conform.mjs",
+    "conform:incompatible": "node src/conform.mjs --fixture fixtures/incompatible-schema-version.json",
+    "test": "node --test test/*.test.mjs"
+  }
+}

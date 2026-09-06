@@ -1,0 +1,42 @@
+name: Contract conformance
+
+on:
+  pull_request:
+    paths:
+      - 'contract/**'
+      - 'conformance/**'
+      - 'docs/bleecker-toggle-conformance.md'
+      - '.github/workflows/contract-conformance.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'contract/**'
+      - 'conformance/**'
+      - 'docs/bleecker-toggle-conformance.md'
+      - '.github/workflows/contract-conformance.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bleecker-toggle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Validate immutable release
+        run: npm --prefix contract run validate
+      - name: Test black-box conformance
+        run: npm --prefix conformance/bleecker-toggle test
+      - name: Capture passing evidence
+        run: npm --prefix conformance/bleecker-toggle run conform
+      - name: Capture expected incompatible-contract evidence
+        run: |
+          if npm --prefix conformance/bleecker-toggle run conform:incompatible >incompatible.out 2>&1; then
+            echo 'incompatible fixture unexpectedly passed'
+            exit 1
+          fi
+          grep -F 'FAIL $.metadata.schemaVersion=2.0.0; supported=1.0.0; release=0.1.0' incompatible.out

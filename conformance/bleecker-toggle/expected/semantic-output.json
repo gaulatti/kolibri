@@ -1,0 +1,80 @@
+{
+  "artifact": {
+    "landedCommit": "f14a631a001f867e208be6053ac07df32fda4dca",
+    "manifestSha256": "aec1a74fb557ab0a5d254b5ac8d98306e552dc88cdb6ebeeb6f98d1460cfe134",
+    "releaseVersion": "0.1.0",
+    "schemaVersion": "1.0.0",
+    "sourceRevision": "24e6905a0a6b9e6dae08b0832781b0f06f8c0b5f"
+  },
+  "family": {
+    "entrypoint": "bleecker-toggle-family",
+    "id": "bleecker-toggle-family",
+    "kind": "atom",
+    "name": "Toggle",
+    "states": {
+      "disabled": [false, true],
+      "pressed": [false, true]
+    },
+    "variants": {
+      "size": ["sm", "md", "lg"],
+      "variant": ["default", "outline"]
+    }
+  },
+  "portability": {
+    "consumerOwned": [
+      "asset rendering and icon-library substitution",
+      "DOM event wiring and disabled-event suppression",
+      "focus-ring and keyboard-modality presentation",
+      "light/dark theme tokens, sizing, spacing, motion, and responsive layout",
+      "React controlled-state API and callback scheduling",
+      "screen-reader verification in the target browser or platform"
+    ],
+    "contractGuarantees": [
+      "accessible name and pressed-state attributes",
+      "checksummed asset identity",
+      "control element and semantic part names",
+      "declared variant and state vocabulary",
+      "entrypoint and component identity",
+      "ordered state, emit, and focus actions"
+    ]
+  },
+  "semantics": {
+    "assetReferences": [
+      {
+        "assetId": "bold-icon",
+        "integrity": "sha256-SfE9Iehoz4G+PvGyt6YR1rsNJlV3FzTbhNQfQkTqD6g=",
+        "kind": "icon",
+        "node": "icon",
+        "uri": "assets/bold.svg"
+      }
+    ],
+    "events": ["activate-pressed", "activate-unpressed", "focus-request"],
+    "focusTargets": ["control"],
+    "root": {
+      "attributes": {
+        "aria-label": "Bold",
+        "aria-pressed": false,
+        "disabled": false,
+        "type": "button"
+      },
+      "element": "button",
+      "part": "control"
+    },
+    "transitions": [
+      {
+        "behavior": "press-off",
+        "emit": "pressed-change",
+        "event": "activate-pressed",
+        "state": "pressed",
+        "value": false
+      },
+      {
+        "behavior": "press-on",
+        "emit": "pressed-change",
+        "event": "activate-unpressed",
+        "state": "pressed",
+        "value": true
+      }
+    ]
+  }
+}

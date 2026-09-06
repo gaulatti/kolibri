@@ -1,0 +1,48 @@
+{
+  "components": [
+    {
+      "actions": [
+        {
+          "id": "submit",
+          "type": "emit"
+        }
+      ],
+      "assets": [],
+      "behaviors": [],
+      "events": [
+        {
+          "name": "press"
+        }
+      ],
+      "id": "button.primary",
+      "kind": "atom",
+      "name": "PrimaryButton",
+      "tree": [
+        {
+          "children": [
+            {
+              "element": "span",
+              "id": "label",
+              "part": "label",
+              "text": "Continue",
+              "type": "element"
+            }
+          ],
+          "element": "button",
+          "id": "button",
+          "part": "root",
+          "type": "element"
+        }
+      ]
+    }
+  ],
+  "entrypoints": [
+    "button.primary"
+  ],
+  "metadata": {
+    "compatibleSchemaVersions": ">=1.0.0 <2.0.0",
+    "releaseVersion": "0.1.0",
+    "schemaVersion": "1.0.0",
+    "sourceRevision": "24e6905a0a6b9e6dae08b0832781b0f06f8c0b5f"
+  }
+}

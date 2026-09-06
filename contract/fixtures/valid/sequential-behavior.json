@@ -1,0 +1,11 @@
+{
+  "components": [{
+    "id": "disclosure", "name": "Disclosure", "kind": "molecule",
+    "tree": [{"id": "root", "type": "element", "element": "section", "part": "root", "children": [{"id": "trigger", "type": "element", "element": "button", "part": "trigger"}, {"id": "panel", "type": "element", "element": "div", "part": "panel"}]}],
+    "behaviors": [{"id": "open-sequence", "kind": "sequence", "steps": [{"order": 1, "event": "activate", "actionId": "set-open"}, {"order": 2, "event": "activate", "actionId": "focus-panel"}]}],
+    "events": [{"name": "activate"}],
+    "actions": [{"id": "set-open", "type": "set-state", "value": "open"}, {"id": "focus-panel", "type": "focus", "target": "panel"}],
+    "assets": []
+  }],
+  "entrypoints": ["disclosure"]
+}

@@ -1,0 +1,1 @@
+{"metadata":{"releaseVersion":"0.1.0","schemaVersion":"1.0.0","compatibleSchemaVersions":">=1.0.0 <2.0.0","sourceRevision":"24e6905a0a6b9e6dae08b0832781b0f06f8c0b5f"},"components":[{"id":"button","name":"Button","kind":"atom","tree":[],"behaviors":[{"id":"bad","kind":"sequence","steps":[],"delay":10}],"events":[],"actions":[],"assets":[]}],"entrypoints":["button"]}

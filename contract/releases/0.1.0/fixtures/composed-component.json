@@ -1,0 +1,71 @@
+{
+  "components": [
+    {
+      "actions": [],
+      "assets": [
+        {
+          "id": "avatar-placeholder",
+          "integrity": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+          "kind": "image",
+          "uri": "assets/avatar.png"
+        }
+      ],
+      "behaviors": [],
+      "events": [],
+      "id": "avatar",
+      "kind": "atom",
+      "name": "Avatar",
+      "tree": [
+        {
+          "element": "img",
+          "id": "image",
+          "part": "image",
+          "type": "element"
+        }
+      ]
+    },
+    {
+      "actions": [],
+      "assets": [],
+      "behaviors": [],
+      "events": [],
+      "id": "profile-card",
+      "kind": "molecule",
+      "name": "ProfileCard",
+      "tree": [
+        {
+          "children": [
+            {
+              "componentId": "avatar",
+              "id": "avatar-instance",
+              "props": {
+                "size": "medium"
+              },
+              "type": "component"
+            },
+            {
+              "element": "h2",
+              "id": "name",
+              "part": "title",
+              "text": "Ada Lovelace",
+              "type": "element"
+            }
+          ],
+          "element": "article",
+          "id": "card",
+          "part": "root",
+          "type": "element"
+        }
+      ]
+    }
+  ],
+  "entrypoints": [
+    "profile-card"
+  ],
+  "metadata": {
+    "compatibleSchemaVersions": ">=1.0.0 <2.0.0",
+    "releaseVersion": "0.1.0",
+    "schemaVersion": "1.0.0",
+    "sourceRevision": "24e6905a0a6b9e6dae08b0832781b0f06f8c0b5f"
+  }
+}

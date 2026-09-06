@@ -1,0 +1,172 @@
+name: Deploy backend
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      ECR_REPOSITORY_URI: ${{ vars.ECR_REPOSITORY_URI }}
+      IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate build configuration
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          test -n "$AWS_ACCESS_KEY_ID"
+          test -n "$AWS_SECRET_ACCESS_KEY"
+          test -n "$AWS_REGION"
+          test -n "$ECR_REPOSITORY_URI"
+
+      - name: Configure AWS publisher credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          pull: true
+          push: true
+          tags: ${{ env.ECR_REPOSITORY_URI }}:${{ env.IMAGE_TAG }}
+          cache-from: type=gha,scope=kolibri-backend
+          cache-to: type=gha,mode=max,scope=kolibri-backend
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment: production
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      ECR_REPOSITORY_URI: ${{ vars.ECR_REPOSITORY_URI }}
+      IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+      CONTAINER_NAME: ${{ vars.BACKEND_CONTAINER_NAME }}
+      HTTP_PORT: ${{ vars.BACKEND_HTTP_PORT }}
+      KOLIBRI_STACK_NAME: ${{ vars.KOLIBRI_STACK_NAME }}
+      COGNITO_USER_POOL_ID: ${{ vars.COGNITO_USER_POOL_ID }}
+      COGNITO_APP_CLIENT_ID: ${{ vars.VITE_COGNITO_CLIENT_ID }}
+      CORS_ALLOWED_ORIGINS: ${{ vars.CORS_ALLOWED_ORIGINS }}
+      BACKEND_LOG_GROUP: ${{ vars.BACKEND_LOG_GROUP }}
+    steps:
+      - name: Validate deployment configuration
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          test -n "$DEPLOY_HOST"
+          test -n "$DEPLOY_USER"
+          test -n "$DEPLOY_SSH_KEY"
+          test -n "$AWS_REGION"
+          test -n "$ECR_REPOSITORY_URI"
+          test -n "$IMAGE_TAG"
+          test -n "$CONTAINER_NAME"
+          test -n "$HTTP_PORT"
+          test -n "$KOLIBRI_STACK_NAME"
+          test -n "$COGNITO_USER_POOL_ID"
+          test -n "$COGNITO_APP_CLIENT_ID"
+          test -n "$CORS_ALLOWED_ORIGINS"
+          test -n "$BACKEND_LOG_GROUP"
+
+      - name: Deploy to on-premises host
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+          ECR_REPOSITORY_URI: ${{ env.ECR_REPOSITORY_URI }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
+          HTTP_PORT: ${{ env.HTTP_PORT }}
+          KOLIBRI_STACK_NAME: ${{ env.KOLIBRI_STACK_NAME }}
+          COGNITO_USER_POOL_ID: ${{ env.COGNITO_USER_POOL_ID }}
+          COGNITO_APP_CLIENT_ID: ${{ env.COGNITO_APP_CLIENT_ID }}
+          CORS_ALLOWED_ORIGINS: ${{ env.CORS_ALLOWED_ORIGINS }}
+          BACKEND_LOG_GROUP: ${{ env.BACKEND_LOG_GROUP }}
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script_stop: true
+          envs: AWS_REGION,ECR_REPOSITORY_URI,IMAGE_TAG,CONTAINER_NAME,HTTP_PORT,KOLIBRI_STACK_NAME,COGNITO_USER_POOL_ID,COGNITO_APP_CLIENT_ID,CORS_ALLOWED_ORIGINS,BACKEND_LOG_GROUP
+          script: |
+            set -eu
+
+            test -d "$HOME/.aws"
+            ECR_REGISTRY="${ECR_REPOSITORY_URI%%/*}"
+            IMAGE_URI="${ECR_REPOSITORY_URI}:${IMAGE_TAG}"
+
+            aws sts get-caller-identity >/dev/null
+            aws ecr get-login-password --region "$AWS_REGION" |
+              docker login --username AWS --password-stdin "$ECR_REGISTRY"
+            docker pull "$IMAGE_URI"
+
+            docker run --rm \
+              -e AWS_EC2_METADATA_DISABLED=true \
+              -e AWS_REGION="$AWS_REGION" \
+              -e KOLIBRI_STACK_NAME="$KOLIBRI_STACK_NAME" \
+              -v "$HOME/.aws:/home/node/.aws:ro" \
+              "$IMAGE_URI" npm run migration:run:prod
+
+            docker stop "$CONTAINER_NAME" || true
+            docker rm "$CONTAINER_NAME" || true
+
+            LOG_STREAM_ID="$(cat /proc/sys/kernel/random/uuid)"
+            docker run -d --name "$CONTAINER_NAME" \
+              -p "$HTTP_PORT:$HTTP_PORT" \
+              -e AWS_EC2_METADATA_DISABLED=true \
+              -e AWS_REGION="$AWS_REGION" \
+              -e PORT="$HTTP_PORT" \
+              -e NODE_ENV=production \
+              -e KOLIBRI_STACK_NAME="$KOLIBRI_STACK_NAME" \
+              -e COGNITO_USER_POOL_ID="$COGNITO_USER_POOL_ID" \
+              -e COGNITO_APP_CLIENT_ID="$COGNITO_APP_CLIENT_ID" \
+              -e CORS_ALLOWED_ORIGINS="$CORS_ALLOWED_ORIGINS" \
+              --restart=always \
+              --log-driver=awslogs \
+              --log-opt awslogs-region="$AWS_REGION" \
+              --log-opt awslogs-group="$BACKEND_LOG_GROUP" \
+              --log-opt awslogs-stream="$LOG_STREAM_ID" \
+              -v "$HOME/.aws:/home/node/.aws:ro" \
+              "$IMAGE_URI"
+
+            ATTEMPT=0
+            until [ "$ATTEMPT" -ge 18 ]; do
+              STATUS="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}starting{{end}}' "$CONTAINER_NAME")"
+              if [ "$STATUS" = healthy ]; then
+                exit 0
+              fi
+              if [ "$STATUS" = unhealthy ]; then
+                echo "Kolibri backend became unhealthy"
+                exit 1
+              fi
+              ATTEMPT=$((ATTEMPT + 1))
+              sleep 5
+            done
+
+            echo "Kolibri backend did not become healthy before the timeout"
+            exit 1

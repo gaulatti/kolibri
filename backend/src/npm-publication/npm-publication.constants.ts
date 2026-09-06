@@ -1,0 +1,2 @@
+export const NPM_PROCESS_RUNNER = Symbol('NPM_PROCESS_RUNNER');
+export const NPM_REGISTRY_FETCH = Symbol('NPM_REGISTRY_FETCH');

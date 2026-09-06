@@ -1,0 +1,28 @@
+{
+  "name": "infrastructure",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "npm run build && cdk synth && cdk deploy && npm run initialize:system-secret",
+    "initialize:system-secret": "tsx bin/initialize-system-secret.ts",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.15.0",
+    "@swc/jest": "^0.2.39",
+    "@types/jest": "^30",
+    "@types/node": "^24.10.1",
+    "aws-cdk": "2.1134.0",
+    "jest": "^30",
+    "tsx": "^4.23.0",
+    "typescript": "~7.0.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.1102.0",
+    "aws-cdk-lib": "^2.262.1",
+    "constructs": "^10.5.0",
+    "dotenv": "^17.4.2"
+  }
+}

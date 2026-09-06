@@ -1,0 +1,198 @@
+stages:
+  - build
+  - deploy
+
+backend-build:
+  stage: build
+  image: docker:27-cli
+  services:
+    - name: docker:27-dind
+  environment:
+    name: production
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+    IMAGE_TAG: "$CI_COMMIT_SHA-$CI_PIPELINE_ID"
+  before_script:
+    - apk add --no-cache --upgrade expat aws-cli
+  script:
+    - test -n "$AWS_ACCESS_KEY_ID"
+    - test -n "$AWS_SECRET_ACCESS_KEY"
+    - test -n "$AWS_REGION"
+    - test -n "$ECR_REPOSITORY_URI"
+    - >-
+      aws ecr get-login-password --region "$AWS_REGION" |
+      docker login --username AWS --password-stdin "${ECR_REPOSITORY_URI%%/*}"
+    - docker build --pull --tag "$ECR_REPOSITORY_URI:$IMAGE_TAG" ./backend
+    - docker push "$ECR_REPOSITORY_URI:$IMAGE_TAG"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+
+backend-production:
+  stage: deploy
+  image: alpine:3.21
+  needs:
+    - backend-build
+  environment:
+    name: production
+  resource_group: backend-production
+  variables:
+    IMAGE_TAG: "$CI_COMMIT_SHA-$CI_PIPELINE_ID"
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval "$(ssh-agent -s)"
+    - printf '%s\n' "$DEPLOY_SSH_KEY" | tr -d '\r' | ssh-add -
+    - install -d -m 700 "$HOME/.ssh"
+    - ssh-keyscan -H "$DEPLOY_HOST" >> "$HOME/.ssh/known_hosts"
+    - chmod 600 "$HOME/.ssh/known_hosts"
+  script:
+    - test -n "$DEPLOY_HOST"
+    - test -n "$DEPLOY_USER"
+    - test -n "$DEPLOY_SSH_KEY"
+    - test -n "$AWS_REGION"
+    - test -n "$ECR_REPOSITORY_URI"
+    - test -n "$IMAGE_TAG"
+    - test -n "$BACKEND_CONTAINER_NAME"
+    - test -n "$BACKEND_HTTP_PORT"
+    - test -n "$KOLIBRI_STACK_NAME"
+    - test -n "$COGNITO_USER_POOL_ID"
+    - test -n "$VITE_COGNITO_CLIENT_ID"
+    - test -n "$CORS_ALLOWED_ORIGINS"
+    - test -n "$BACKEND_LOG_GROUP"
+    - |
+      ssh "$DEPLOY_USER@$DEPLOY_HOST" sh -s -- \
+        "$AWS_REGION" \
+        "$ECR_REPOSITORY_URI" \
+        "$IMAGE_TAG" \
+        "$BACKEND_CONTAINER_NAME" \
+        "$BACKEND_HTTP_PORT" \
+        "$KOLIBRI_STACK_NAME" \
+        "$COGNITO_USER_POOL_ID" \
+        "$VITE_COGNITO_CLIENT_ID" \
+        "$CORS_ALLOWED_ORIGINS" \
+        "$BACKEND_LOG_GROUP" <<'REMOTE'
+      set -eu
+
+      AWS_REGION=$1
+      ECR_REPOSITORY_URI=$2
+      IMAGE_TAG=$3
+      CONTAINER_NAME=$4
+      HTTP_PORT=$5
+      KOLIBRI_STACK_NAME=$6
+      COGNITO_USER_POOL_ID=$7
+      COGNITO_APP_CLIENT_ID=$8
+      CORS_ALLOWED_ORIGINS=$9
+      BACKEND_LOG_GROUP=${10}
+
+      test -d "$HOME/.aws"
+      ECR_REGISTRY="${ECR_REPOSITORY_URI%%/*}"
+      IMAGE_URI="${ECR_REPOSITORY_URI}:${IMAGE_TAG}"
+
+      aws sts get-caller-identity >/dev/null
+      aws ecr get-login-password --region "$AWS_REGION" |
+        docker login --username AWS --password-stdin "$ECR_REGISTRY"
+      docker pull "$IMAGE_URI"
+
+      docker run --rm \
+        -e AWS_EC2_METADATA_DISABLED=true \
+        -e AWS_REGION="$AWS_REGION" \
+        -e KOLIBRI_STACK_NAME="$KOLIBRI_STACK_NAME" \
+        -v "$HOME/.aws:/home/node/.aws:ro" \
+        "$IMAGE_URI" npm run migration:run:prod
+
+      docker stop "$CONTAINER_NAME" || true
+      docker rm "$CONTAINER_NAME" || true
+
+      LOG_STREAM_ID="$(cat /proc/sys/kernel/random/uuid)"
+      docker run -d --name "$CONTAINER_NAME" \
+        -p "$HTTP_PORT:$HTTP_PORT" \
+        -e AWS_EC2_METADATA_DISABLED=true \
+        -e AWS_REGION="$AWS_REGION" \
+        -e PORT="$HTTP_PORT" \
+        -e NODE_ENV=production \
+        -e KOLIBRI_STACK_NAME="$KOLIBRI_STACK_NAME" \
+        -e COGNITO_USER_POOL_ID="$COGNITO_USER_POOL_ID" \
+        -e COGNITO_APP_CLIENT_ID="$COGNITO_APP_CLIENT_ID" \
+        -e CORS_ALLOWED_ORIGINS="$CORS_ALLOWED_ORIGINS" \
+        --restart=always \
+        --log-driver=awslogs \
+        --log-opt awslogs-region="$AWS_REGION" \
+        --log-opt awslogs-group="$BACKEND_LOG_GROUP" \
+        --log-opt awslogs-stream="$LOG_STREAM_ID" \
+        -v "$HOME/.aws:/home/node/.aws:ro" \
+        "$IMAGE_URI"
+
+      ATTEMPT=0
+      until [ "$ATTEMPT" -ge 18 ]; do
+        STATUS="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}starting{{end}}' "$CONTAINER_NAME")"
+        if [ "$STATUS" = healthy ]; then
+          exit 0
+        fi
+        if [ "$STATUS" = unhealthy ]; then
+          echo "Kolibri backend became unhealthy"
+          exit 1
+        fi
+        ATTEMPT=$((ATTEMPT + 1))
+        sleep 5
+      done
+
+      echo "Kolibri backend did not become healthy before the timeout"
+      exit 1
+      REMOTE
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+
+frontend-production:
+  stage: deploy
+  image: node:24-bookworm-slim
+  environment:
+    name: production
+  resource_group: frontend-production
+  variables:
+    npm_config_cache: "$CI_PROJECT_DIR/.npm"
+  cache:
+    key:
+      files:
+        - frontend/package-lock.json
+    paths:
+      - .npm/
+  before_script:
+    - apt-get update -qq
+    - apt-get install -y --no-install-recommends awscli ca-certificates
+    - rm -rf /var/lib/apt/lists/*
+  script:
+    - test -n "$AWS_ACCESS_KEY_ID"
+    - test -n "$AWS_SECRET_ACCESS_KEY"
+    - test -n "$AWS_REGION"
+    - test -n "$FRONTEND_BUCKET_NAME"
+    - test -n "$CLOUDFRONT_DISTRIBUTION_ID"
+    - test -n "$VITE_API_BASE_URL"
+    - test -n "$VITE_COGNITO_DOMAIN"
+    - test -n "$VITE_COGNITO_CLIENT_ID"
+    - cd frontend
+    - npm ci
+    - npm run build
+    - >-
+      aws s3 sync build/client "s3://${FRONTEND_BUCKET_NAME}"
+      --delete
+      --cache-control "no-cache"
+      --only-show-errors
+    - >-
+      aws s3 cp build/client/assets "s3://${FRONTEND_BUCKET_NAME}/assets"
+      --recursive
+      --cache-control "public,max-age=31536000,immutable"
+      --only-show-errors
+    - >-
+      aws cloudfront create-invalidation
+      --distribution-id "$CLOUDFRONT_DISTRIBUTION_ID"
+      --paths "/*"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      changes:
+        - frontend/**/*
+        - .gitlab-ci.yml
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual

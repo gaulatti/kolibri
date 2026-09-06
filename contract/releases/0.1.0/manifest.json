@@ -1,0 +1,43 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1453,
+      "path": "bin/validate.mjs",
+      "sha256": "f6c449557e385a2df600a58c8675b356474442ceed542840a9bc5177e70f51e8"
+    },
+    {
+      "bytes": 1564,
+      "path": "fixtures/composed-component.json",
+      "sha256": "95397cfc3c843935d85f004dcbf0c737348b708c89a5285f14de536b57273f8e"
+    },
+    {
+      "bytes": 1597,
+      "path": "fixtures/sequential-behavior.json",
+      "sha256": "5fb62acc2936bd3ee09d28d7c1eebdc5945755a06cdbef1bda8ffa40ccbc83ee"
+    },
+    {
+      "bytes": 957,
+      "path": "fixtures/static-component.json",
+      "sha256": "bcfe71af11ba80eb7a7bcf28fd3c1489fe1167bb8451549d5cb3bd74c17c4c6e"
+    },
+    {
+      "bytes": 6989,
+      "path": "lib/contract.mjs",
+      "sha256": "ee5d926407ba00f00bcc31942852b1e92bd0fad6b6efc3ac5eef2f488ec2288d"
+    },
+    {
+      "bytes": 3785,
+      "path": "schema/kolibri-contract.schema.json",
+      "sha256": "f11127d82f863c4d2f4f74d4b889f1207e93eb5b3d97213bcdb6fa882aaa7809"
+    }
+  ],
+  "compatibleSchemaVersions": ">=1.0.0 <2.0.0",
+  "fixtures": [
+    "fixtures/composed-component.json",
+    "fixtures/sequential-behavior.json",
+    "fixtures/static-component.json"
+  ],
+  "releaseVersion": "0.1.0",
+  "schemaVersion": "1.0.0",
+  "sourceRevision": "24e6905a0a6b9e6dae08b0832781b0f06f8c0b5f"
+}

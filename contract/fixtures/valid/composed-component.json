@@ -1,0 +1,7 @@
+{
+  "components": [
+    {"id": "avatar", "name": "Avatar", "kind": "atom", "tree": [{"id": "image", "type": "element", "element": "img", "part": "image"}], "behaviors": [], "events": [], "actions": [], "assets": [{"id": "avatar-placeholder", "kind": "image", "uri": "assets/avatar.png", "integrity": "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}]},
+    {"id": "profile-card", "name": "ProfileCard", "kind": "molecule", "tree": [{"id": "card", "type": "element", "element": "article", "part": "root", "children": [{"id": "avatar-instance", "type": "component", "componentId": "avatar", "props": {"size": "medium"}}, {"id": "name", "type": "element", "element": "h2", "part": "title", "text": "Ada Lovelace"}]}], "behaviors": [], "events": [], "actions": [], "assets": []}
+  ],
+  "entrypoints": ["profile-card"]
+}

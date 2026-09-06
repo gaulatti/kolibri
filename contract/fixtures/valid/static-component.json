@@ -1,0 +1,8 @@
+{
+  "components": [{
+    "id": "button.primary", "name": "PrimaryButton", "kind": "atom",
+    "tree": [{"id": "button", "type": "element", "element": "button", "part": "root", "children": [{"id": "label", "type": "element", "element": "span", "part": "label", "text": "Continue"}]}],
+    "behaviors": [], "events": [{"name": "press"}], "actions": [{"id": "submit", "type": "emit"}], "assets": []
+  }],
+  "entrypoints": ["button.primary"]
+}

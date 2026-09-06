@@ -1,0 +1,76 @@
+{
+  "components": [
+    {
+      "actions": [
+        {
+          "id": "set-open",
+          "type": "set-state",
+          "value": "open"
+        },
+        {
+          "id": "focus-panel",
+          "target": "panel",
+          "type": "focus"
+        }
+      ],
+      "assets": [],
+      "behaviors": [
+        {
+          "id": "open-sequence",
+          "kind": "sequence",
+          "steps": [
+            {
+              "actionId": "set-open",
+              "event": "activate",
+              "order": 1
+            },
+            {
+              "actionId": "focus-panel",
+              "event": "activate",
+              "order": 2
+            }
+          ]
+        }
+      ],
+      "events": [
+        {
+          "name": "activate"
+        }
+      ],
+      "id": "disclosure",
+      "kind": "molecule",
+      "name": "Disclosure",
+      "tree": [
+        {
+          "children": [
+            {
+              "element": "button",
+              "id": "trigger",
+              "part": "trigger",
+              "type": "element"
+            },
+            {
+              "element": "div",
+              "id": "panel",
+              "part": "panel",
+              "type": "element"
+            }
+          ],
+          "element": "section",
+          "id": "root",
+          "part": "root",
+          "type": "element"
+        }
+      ]
+    }
+  ],
+  "entrypoints": [
+    "disclosure"
+  ],
+  "metadata": {
+    "compatibleSchemaVersions": ">=1.0.0 <2.0.0",
+    "releaseVersion": "0.1.0",
+    "schemaVersion": "1.0.0",
+    "sourceRevision": "24e6905a0a6b9e6dae08b0832781b0f06f8c0b5f"
+  }
+}

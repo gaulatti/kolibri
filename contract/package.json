@@ -1,0 +1,12 @@
+{
+  "name": "@kolibri/neutral-contract",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node src/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "validate": "node releases/0.1.0/bin/validate.mjs releases/0.1.0",
+    "verify:determinism": "node src/verify-determinism.mjs"
+  }
+}

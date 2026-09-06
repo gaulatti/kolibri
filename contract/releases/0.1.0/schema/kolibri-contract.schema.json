@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/gaulatti/kolibri/contract/schema/1.0.0",
+  "title": "Kolibri renderer-neutral component contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["metadata", "components", "entrypoints"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["releaseVersion", "schemaVersion", "compatibleSchemaVersions", "sourceRevision"],
+      "properties": {
+        "releaseVersion": { "const": "0.1.0" },
+        "schemaVersion": { "const": "1.0.0" },
+        "compatibleSchemaVersions": { "const": ">=1.0.0 <2.0.0" },
+        "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "entrypoints": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "components": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/component" },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "tree", "behaviors", "events", "actions", "assets"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["atom", "molecule", "organism"] },
+        "tree": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "behaviors": { "type": "array", "items": { "$ref": "#/$defs/behavior" } },
+        "events": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+        "actions": { "type": "array", "items": { "$ref": "#/$defs/action" } },
+        "assets": { "type": "array", "items": { "$ref": "#/$defs/asset" } }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["element", "component"] },
+        "element": { "type": "string" },
+        "componentId": { "type": "string" },
+        "part": { "type": "string" },
+        "text": { "type": "string" },
+        "props": { "type": "object" },
+        "children": { "type": "array", "items": { "$ref": "#/$defs/node" } }
+      }
+    },
+    "behavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "steps"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "const": "sequence" },
+        "steps": { "type": "array", "items": { "$ref": "#/$defs/step" }, "minItems": 1 }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order", "event", "actionId"],
+      "properties": {
+        "order": { "type": "integer", "minimum": 1 },
+        "event": { "type": "string" },
+        "actionId": { "type": "string" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": { "name": { "type": "string" } }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "enum": ["emit", "set-state", "focus"] },
+        "value": {},
+        "target": { "type": "string" }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "uri", "integrity"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": { "enum": ["image", "font", "icon"] },
+        "uri": { "type": "string" },
+        "integrity": { "type": "string", "pattern": "^sha256-[A-Za-z0-9+/=]+$" }
+      }
+    }
+  }
+}

@@ -40,6 +40,8 @@ Take this opportunity to create or add to a simple resume portfolio to highlight
 > graduation. The source and working-tree provenance for this GitHub baseline is
 > recorded in
 > [`docs/private-repository-provenance.md`](docs/private-repository-provenance.md).
+> Deployment workflows are manual-only while this gate is active; pushes to
+> `main` do not publish images, deploy services, or update the hosted frontend.
 
 > **Required Figma authoring gate:** Before generating any new or structurally
 > changed Design System, run the complete

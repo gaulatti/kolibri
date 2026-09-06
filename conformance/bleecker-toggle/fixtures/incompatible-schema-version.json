@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "releaseVersion": "0.1.0",
+    "schemaVersion": "2.0.0",
+    "compatibleSchemaVersions": ">=2.0.0 <3.0.0",
+    "sourceRevision": "24e6905a0a6b9e6dae08b0832781b0f06f8c0b5f"
+  },
+  "components": [
+    {
+      "id": "incompatible-toggle",
+      "name": "IncompatibleToggle",
+      "kind": "atom",
+      "tree": [{ "id": "control", "type": "element", "element": "button", "part": "control" }],
+      "behaviors": [],
+      "events": [],
+      "actions": [],
+      "assets": []
+    }
+  ],
+  "entrypoints": ["incompatible-toggle"]
+}

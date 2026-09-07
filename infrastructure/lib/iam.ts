@@ -1,7 +1,6 @@
 import * as cloudfront from "aws-cdk-lib/aws-cloudfront";
 import * as ecr from "aws-cdk-lib/aws-ecr";
 import * as iam from "aws-cdk-lib/aws-iam";
-import * as logs from "aws-cdk-lib/aws-logs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
@@ -21,7 +20,6 @@ export interface IamProps {
   readonly systemSecret: secretsmanager.CfnSecret;
   readonly distribution: cloudfront.Distribution;
   readonly containerRepository: ecr.Repository;
-  readonly backendLogGroup: logs.LogGroup;
 }
 
 export function createIamResources(
@@ -60,7 +58,6 @@ export function createIamResources(
     }),
   );
   props.containerRepository.grantPull(backendRuntimeUser);
-  props.backendLogGroup.grantWrite(backendRuntimeUser);
 
   const frontendPublisher = new iam.User(scope, "FrontendPublisher", {
     userName: `${props.stackNamespace}-frontend-publisher`,

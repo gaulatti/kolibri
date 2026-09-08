@@ -199,8 +199,8 @@ describe("Kolibri infrastructure", () => {
     expect(serialized).not.toContain("secretsmanager:DeleteSecret");
     expect(serialized).toContain("ecr:BatchGetImage");
     expect(serialized).toContain("ecr:GetDownloadUrlForLayer");
-    expect(serialized).toContain("logs:CreateLogStream");
-    expect(serialized).toContain("logs:PutLogEvents");
+    expect(serialized).not.toContain("logs:CreateLogStream");
+    expect(serialized).not.toContain("logs:PutLogEvents");
     expect(serialized).not.toContain("ListGenerationRunPrefix");
     expect(serialized).not.toContain("secretsmanager:DescribeSecret");
     const wildcardStatements =
@@ -261,19 +261,10 @@ describe("Kolibri infrastructure", () => {
     template.hasOutput("ContainerRepositoryUri", { Value: Match.anyValue() });
   });
 
-  it("creates a retained backend log group for the on-premises container", () => {
-    template.resourceCountIs("AWS::Logs::LogGroup", 1);
-    template.hasResourceProperties("AWS::Logs::LogGroup", {
-      LogGroupName: "/kolibri/TestInfrastructureStack/backend",
-      RetentionInDays: 30,
-    });
-    template.hasResource("AWS::Logs::LogGroup", {
-      DeletionPolicy: "Retain",
-      UpdateReplacePolicy: "Retain",
-    });
-    template.hasOutput("BackendLogGroupName", {
-      Value: Match.anyValue(),
-    });
+  it("does not create or grant CloudWatch application logging", () => {
+    template.resourceCountIs("AWS::Logs::LogGroup", 0);
+    expect(JSON.stringify(template.toJSON())).not.toContain("BackendLogGroup");
+    expect(JSON.stringify(template.findResources("AWS::IAM::Policy"))).not.toContain("logs:");
   });
 
   it("does not provision AWS backend or database hosting or expose application secrets", () => {

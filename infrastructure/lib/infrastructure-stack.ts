@@ -61,7 +61,6 @@ export class InfrastructureStack extends cdk.Stack {
       systemSecret: storage.systemSecret,
       distribution: frontendHosting.distribution,
       containerRepository: compute.containerRepository,
-      backendLogGroup: compute.backendLogGroup,
     });
 
     new cdk.CfnOutput(this, "CognitoUserPoolId", {
@@ -116,9 +115,6 @@ export class InfrastructureStack extends cdk.Stack {
     });
     new cdk.CfnOutput(this, "ContainerRepositoryUri", {
       value: compute.containerRepository.repositoryUri,
-    });
-    new cdk.CfnOutput(this, "BackendLogGroupName", {
-      value: compute.backendLogGroup.logGroupName,
     });
     new cdk.CfnOutput(this, "FrontendUrl", {
       value: configuration.frontendUrl,

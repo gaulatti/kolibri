@@ -23,7 +23,7 @@ CDK creates:
   the configured custom frontend hostname;
 - ACM certificate and Route 53 A/AAAA aliases;
 - retained singleton `<stack-name>/system` secret;
-- private ECR repository and CloudWatch backend log group;
+- private ECR repository; backend logs remain on the host in Docker's bounded local store;
 - least-privilege backend-runtime and CI-publisher IAM users.
 
 The application is deployed in `us-east-1`, which is required for the ACM
@@ -37,7 +37,7 @@ certificate used by CloudFront.
 | `lib/authentication.ts`       | Cognito and Google federation.                                |
 | `lib/frontend-hosting.ts`     | ACM, CloudFront, and Route 53.                                |
 | `lib/storage.ts`              | Frontend/generation buckets and system secret.                |
-| `lib/compute.ts`              | ECR and backend log group.                                    |
+| `lib/compute.ts`              | Retained, immutable ECR repository.                           |
 | `lib/iam.ts`                  | Backend-runtime and publisher permissions.                    |
 | `lib/infrastructure-stack.ts` | Composition and deployment outputs.                           |
 
@@ -184,7 +184,6 @@ CDK prints the values needed by the remaining setup. Record at least:
 | `FrontendDistributionId`             | CloudFront invalidation.                    |
 | `GenerationStorageBucketName`        | System-secret storage configuration.        |
 | `ContainerRepositoryUri`             | Backend image publishing/deployment.        |
-| `BackendLogGroupName`                | On-premises container logs.                 |
 | `BackendRuntimeUserName`             | On-premises AWS identity.                   |
 | `FrontendPublisherAccessKeyId`       | GitHub/GitLab protected secret.             |
 | `FrontendPublisherSecretAccessKey`   | GitHub/GitLab protected secret.             |
@@ -484,7 +483,6 @@ Configure these non-secret deployment variables:
 | `CORS_ALLOWED_ORIGINS`       | `FrontendUrl`; comma-separate additional intentional origins. |
 | `BACKEND_HTTP_PORT`          | Port exposed by the backend container.                        |
 | `BACKEND_CONTAINER_NAME`     | Stable Docker container name, for example `kolibri`.          |
-| `BACKEND_LOG_GROUP`          | `BackendLogGroupName`.                                        |
 
 `KOLIBRI_STACK_NAME` is needed by the backend deployment, not by the frontend
 build. It derives both singleton secret names and the generation S3 prefix at
@@ -571,7 +569,8 @@ GitHub and GitLab both:
 4. use the host's backend-runtime AWS identity to pull the image;
 5. run `npm run migration:run:prod` in a one-shot container;
 6. replace the existing backend container;
-7. send Docker logs to `BackendLogGroupName`;
+7. retain Docker logs on the host with the `local` driver, capped at three
+   10 MiB files;
 8. wait until the image health check passes.
 
 The backend runtime and publisher identities are intentionally different. CI
@@ -616,8 +615,17 @@ After infrastructure, database, secret, backend, and frontend deployment:
 
 If frontend authentication succeeds but API screens fail, verify
 `VITE_API_BASE_URL`, backend CORS, Cognito pool/client IDs, and public API TLS. If
-the backend cannot start, inspect the CloudWatch log group and validate the
-system-secret shape, PostgreSQL reachability, and mounted runtime identity.
+the backend cannot start, inspect `docker logs --tail 300 <container-name>` on
+the host and validate the system-secret shape, PostgreSQL reachability, and
+mounted runtime identity. Do not copy credentials, tokens, or content-bearing
+logs into tickets.
+
+Kolibri remains unlaunched until graduation. GitHub deployment workflows are
+`workflow_dispatch` only, and every GitLab publishing/deployment job is manual.
+When launch is later authorized, both backend workflows start the container
+with Docker's `local` log driver using `max-size=10m` and `max-file=3`; neither
+workflow requires a CloudWatch log-group variable. Rollback restores the prior
+immutable image using the same bounded local logging options.
 
 ## Local runtime
 

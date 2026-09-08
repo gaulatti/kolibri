@@ -70,7 +70,6 @@ jobs:
       COGNITO_USER_POOL_ID: ${{ vars.COGNITO_USER_POOL_ID }}
       COGNITO_APP_CLIENT_ID: ${{ vars.VITE_COGNITO_CLIENT_ID }}
       CORS_ALLOWED_ORIGINS: ${{ vars.CORS_ALLOWED_ORIGINS }}
-      BACKEND_LOG_GROUP: ${{ vars.BACKEND_LOG_GROUP }}
     steps:
       - name: Validate deployment configuration
         env:
@@ -90,7 +89,6 @@ jobs:
           test -n "$COGNITO_USER_POOL_ID"
           test -n "$COGNITO_APP_CLIENT_ID"
           test -n "$CORS_ALLOWED_ORIGINS"
-          test -n "$BACKEND_LOG_GROUP"
 
       - name: Deploy to on-premises host
         uses: appleboy/ssh-action@v1.2.0
@@ -104,13 +102,12 @@ jobs:
           COGNITO_USER_POOL_ID: ${{ env.COGNITO_USER_POOL_ID }}
           COGNITO_APP_CLIENT_ID: ${{ env.COGNITO_APP_CLIENT_ID }}
           CORS_ALLOWED_ORIGINS: ${{ env.CORS_ALLOWED_ORIGINS }}
-          BACKEND_LOG_GROUP: ${{ env.BACKEND_LOG_GROUP }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script_stop: true
-          envs: AWS_REGION,ECR_REPOSITORY_URI,IMAGE_TAG,CONTAINER_NAME,HTTP_PORT,KOLIBRI_STACK_NAME,COGNITO_USER_POOL_ID,COGNITO_APP_CLIENT_ID,CORS_ALLOWED_ORIGINS,BACKEND_LOG_GROUP
+          envs: AWS_REGION,ECR_REPOSITORY_URI,IMAGE_TAG,CONTAINER_NAME,HTTP_PORT,KOLIBRI_STACK_NAME,COGNITO_USER_POOL_ID,COGNITO_APP_CLIENT_ID,CORS_ALLOWED_ORIGINS
           script: |
             set -eu
 
@@ -133,7 +130,6 @@ jobs:
             docker stop "$CONTAINER_NAME" || true
             docker rm "$CONTAINER_NAME" || true
 
-            LOG_STREAM_ID="$(cat /proc/sys/kernel/random/uuid)"
             docker run -d --name "$CONTAINER_NAME" \
               -p "$HTTP_PORT:$HTTP_PORT" \
               -e AWS_EC2_METADATA_DISABLED=true \
@@ -145,10 +141,9 @@ jobs:
               -e COGNITO_APP_CLIENT_ID="$COGNITO_APP_CLIENT_ID" \
               -e CORS_ALLOWED_ORIGINS="$CORS_ALLOWED_ORIGINS" \
               --restart=always \
-              --log-driver=awslogs \
-              --log-opt awslogs-region="$AWS_REGION" \
-              --log-opt awslogs-group="$BACKEND_LOG_GROUP" \
-              --log-opt awslogs-stream="$LOG_STREAM_ID" \
+              --log-driver=local \
+              --log-opt max-size=10m \
+              --log-opt max-file=3 \
               -v "$HOME/.aws:/home/node/.aws:ro" \
               "$IMAGE_URI"
 

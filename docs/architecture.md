@@ -40,7 +40,7 @@ On-premises NestJS backend
   |-- private generation S3 bucket (production)
   |-- local artifact volume (development)
   |-- npm registry (version lookup and optional publication)
-  `-- CloudWatch Logs through the Docker awslogs driver (production)
+  `-- bounded Docker local logs on the on-premises host (production)
 ```
 
 ## Backend module responsibilities

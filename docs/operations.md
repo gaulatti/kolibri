@@ -203,8 +203,11 @@ The Cognito app client then redirects the browser to the frontend callback.
 
 ### Compute-adjacent resources
 
-- encrypted ECR repository for the backend image;
-- CloudWatch Logs group for on-premises backend container logs.
+- encrypted ECR repository for the backend image.
+
+The backend container uses Docker's host-local `local` logging driver with a
+10 MiB rotation threshold and three retained files. CDK creates no application
+log group.
 
 No backend host, load balancer, ECS/EKS service, RDS database, or PostgreSQL
 instance is created.
@@ -216,7 +219,6 @@ instance is created.
 Used by the on-premises host through its mounted AWS profile. Least privilege:
 
 - pull backend images from the stack ECR repository;
-- write to the backend CloudWatch log group;
 - read the system secret;
 - read/write the one shared Design System runtime secret;
 - read/write/delete generation objects only under the stack-compatible S3
@@ -250,7 +252,6 @@ known CDK outputs as CI variables.
 | `FrontendBucketName`                                                | frontend publishing workflow.             |
 | `FrontendDistributionId`                                            | CloudFront invalidation workflow.         |
 | `ContainerRepositoryUri`                                            | backend image build/deploy workflows.     |
-| `BackendLogGroupName`                                               | on-premises Docker awslogs configuration. |
 | `FrontendPublisherAccessKeyId` / `FrontendPublisherSecretAccessKey` | GitHub/GitLab protected secrets.          |
 | `FrontendUrl`, callback/logout URLs, FQDN                           | OAuth verification and smoke tests.       |
 
@@ -308,7 +309,6 @@ BACKEND_HTTP_PORT
 KOLIBRI_STACK_NAME
 COGNITO_USER_POOL_ID
 CORS_ALLOWED_ORIGINS
-BACKEND_LOG_GROUP
 ```
 
 ### Frontend deployment
@@ -331,7 +331,8 @@ BACKEND_LOG_GROUP
 7. Run migrations in a temporary container.
 8. Stop/remove the old named container.
 9. Start the new container with production identifiers, AWS profile mount,
-   restart policy, health check, and CloudWatch `awslogs` driver.
+   restart policy, health check, and Docker `local` logging capped at three
+   10 MiB files.
 10. Poll health and fail deployment if the container becomes unhealthy or does
     not become healthy before timeout.
 
@@ -356,14 +357,14 @@ After infrastructure/database/backend/frontend deployment:
 
 ## Backup and retention considerations
 
-CDK marks persistent buckets, ECR, log group, user pool, and secrets for
+CDK marks persistent buckets, ECR, user pool, and secrets for
 retention. Operators remain responsible for:
 
 - PostgreSQL backups and restore testing;
 - Secrets Manager recovery/version retention policy;
 - S3 lifecycle/retention policy appropriate to private source snapshots;
 - ECR image lifecycle policy;
-- CloudWatch log retention and cost controls;
+- host disk monitoring for the bounded Docker log store;
 - rotation of CI publisher keys, backend runtime credentials, deployment SSH
   key, Google OAuth secret, database password, Figma tokens, and npm tokens.
 

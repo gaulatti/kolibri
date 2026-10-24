@@ -6,41 +6,62 @@ Status: local verification implemented; hosted integration not accepted. Audited
 
 ## Supported shared implementation
 
-Native coverage acceptance was verified with protected Clouseau main
-[`7d350031a5172282fae462cdaa2416c424c5c16f`](https://github.com/gaulatti/clouseau/commit/7d350031a5172282fae462cdaa2416c424c5c16f),
-with engine digest
-`495da50549927a87e46227504505278932c6b437a67a1eeffddb5c3abb8f9768`.
-This revision includes protocol-v2 code-owner merge enforcement, review
-completeness and convergence. Its recipe still accepts one coverage report and
-one source directory, and consumers still pin a reviewed full engine SHA.
+The final thin integration targets released public Clouseau
+[`29eab7152004a42b14c029cd7f1eadb4d7c647c1`](https://github.com/gaulatti/clouseau/commit/29eab7152004a42b14c029cd7f1eadb4d7c647c1),
+engine digest
+`4e0425c6f49efb070783e9984f1fbf8327d548b9c67b930881d964b4ba442d4d`.
+It includes initial trust installation, public identity export, multi-root native
+coverage, code-owner enforcement, review completeness/convergence, bounded
+job-output acceptance-record transport and run-wide frozen engine selection.
+Codex and Claude Code are the supported authenticated local harnesses.
 
-The initial public protected-main channel inspected was Clouseau
-[`4f441cb5abba0600cfad1b86adb561f347e93d96`](https://github.com/gaulatti/clouseau/commit/4f441cb5abba0600cfad1b86adb561f347e93d96),
-with engine digest
-`efc1e48363f73edd317dc61a231ab2fa01b0808d8a53ff6c0f6a9c7c2a5c3691`.
-There were no GitHub release tags. Its documented consumer interface requires
-an immutable engine pin. The shared local agent bootstrap is independent of CI;
-Codex and Claude Code are the supported authenticated harnesses.
+The stable resolver is pinned at
+`f5b6f04a5b95090fc0b5dc0e6fec85cc426273f0`; it validates protected public
+Clouseau main once per workflow run. Every engine job directly needs the
+resolver and consumes its exact SHA and digest. Missing outputs select an
+invalid all-zero checkout revision; actual content and engine identity are
+checked before acceptance. Summary provenance avoids an optional diagnostic
+artifact upload without changing resolution or verification. This wiring is
+proposed and has not established ordinary PR acceptance or upgrade proof yet.
 
-Clouseau owns the engine, scoring, provider integration, receipt validation and
-review protocol. Its [local-review documentation](https://github.com/gaulatti/clouseau/blob/4f441cb5abba0600cfad1b86adb561f347e93d96/docs/local-review.md)
-requires a verification recipe and public signing enrollment from the accepted
-protected base. Proposed files cannot establish their own trust. No supported
-generic first-consumer bootstrap procedure was available in this revision.
+`.github/clouseau.json` selects released manual merge mode and optional local
+receipt reuse. Its `central_source` authorizes only public Clouseau main. The
+public enrollment was exported through the released `public-identity` command
+for native actor `gaulatti`; no private signing material was read or copied.
+The entry remains **proposed enrollment**, not accepted trust. Matching eligible
+receipts avoid CI AI calls; absent receipts use the qualified routed CI reviewer;
+invalid receipts fail without an unexpected paid fallback. Those hosted paths
+remain unproved until installation is accepted and exercised.
 
-The owner subsequently confirmed that these repositories must remain private.
-When protection is unavailable, the owner permits a supported manual-merge path
-with automatic merge disabled and unchanged tests, exact coverage and AI review
-requirements. This supersedes the original requirement to wait for a GitHub plan
-upgrade. It does not turn an unavailable shared manual-review mode or bootstrap
-into an accepted consumer-side workaround. The subsequently released
-[`ae6ae025c5a5e13bc2910602acf5c33838babbfa`](https://github.com/gaulatti/clouseau/commit/ae6ae025c5a5e13bc2910602acf5c33838babbfa)
-supports accepted protocol-v2 `merge_mode: "manual"`, verifies the exact private
-plan limitation and auto-merge-disabled setting, and preserves the other gates.
-Its engine digest is
-`134c49428a14a51e1ead6ab622a79759e46ad2c6e9a7547da7d7a267dddf396f`.
-Kolibri's current auto-merge setting is disabled; visibility, branch settings and
-deployment controls were preserved.
+The supported [initial trust procedure](https://github.com/gaulatti/clouseau/blob/29eab7152004a42b14c029cd7f1eadb4d7c647c1/docs/initial-installation.md)
+freezes the candidate, records an explicit native administrator commit grant,
+performs authenticated independent local review, then publishes installation-only
+signed evidence before a ready PR. Its separate read-only checker requires real
+successful PR-event verification and returns manual owner acceptance, never
+ordinary approval or automatic merge. No grant, review, receipt or PR has been
+created for this candidate.
+
+A deterministic complete-evidence capacity blocker remains. Against protected
+base `fe39ef5b63110598b0e8ff0b73574f28cf98ec6d`, the earlier fully committed
+candidate `3bb2584e8ff82a1454d44a589e0835a76d8b4766` contains 98 changed paths
+and 153 complete immutable source entries. Their source JSON alone is
+1,595,031 JavaScript string characters. Including every changed patch and history
+produces a **1,990,080-character lower bound**, above the shared **900,000**
+source-evidence limit; the shared `refresh` rejects it. The initial numbered
+model packet is 2,396,566 characters. No individual file exceeds 300,000 bytes.
+These measurements omit accepted trust metadata, requirement, verification,
+additional requested source and review reports: they are not an eligible review
+snapshot or signed evidence. New thin wiring does not make that lower bound fit.
+Do not omit source, manufacture trust, obtain a grant or spend model calls while
+this shared limit prevents complete review. A central supported capacity repair
+is required, followed by a fresh full-candidate measurement.
+
+The owner requires continued privacy and explicitly accepts the existing
+persistent Helix private pool. Where GitHub's private plan cannot enforce branch
+protection, the released manual mode preserves tests, exact coverage, review and
+current-head ownership requirements. Repository auto-merge remains disabled.
+The controller never merges or deploys in this mode. Deployment and infrastructure
+authorization remain separate; no AWS, SSM or CDK operation was performed.
 
 ## Resumed verification
 
@@ -144,8 +165,13 @@ separate pending central integration dependency, not an optional diagnostic.
 qualified routed review roles and every required native verification step.
 Deployment is deliberately absent from the shared controller: Kolibri's existing
 deployment workflows remain manual-only. Public signing enrollment and separated
-trusted assessment/write jobs still require the released bootstrap and record
-transport. This proposed configuration is not accepted policy or an approval.
+trusted assessment/write jobs are now prepared using released interfaces.
+Assessment executes only accepted-base configuration and the frozen shared
+engine on ready PR-target events. The separate writer receives no provider key;
+it runs only on those same trusted events and fails if assessment fails or is
+unavailable. Push verification has no provider or write job. Manual dispatch
+only requests a trusted PR-event reassessment. This proposed configuration is
+not accepted policy or an approval.
 
 The original negative baseline below is retained as historical evidence. It is
 not the current frontend result.
@@ -162,7 +188,7 @@ not the current frontend result.
 | Default branch | `main`, `protected: false`. |
 | Protection and rulesets | Both APIs return HTTP 403: “Upgrade to GitHub Pro or make this repository public to enable this feature.” Privacy must be preserved. |
 | Merge/settings | Auto-merge disabled; Actions has read-only default permissions and cannot approve PR reviews. No settings were weakened or bypass actors introduced. |
-| Secrets | No repository secret names returned; no secret values read. No keys requested while the selected integration remains blocked. |
+| Secrets | `DEEPSEEK_API_KEY` and `TYPESAFE_API_KEY` are available for the selected routed read-only assessment. Secret values were not read. |
 | Open PRs | None at audit time. |
 | Existing CI | Contract conformance; it is path-filtered and uses the existing Helix self-hosted runner. It is not a complete application verification gate. |
 | Deployments | Backend and frontend dispatch-only. Only recorded production deployments were failures. No deployment or infrastructure operation was triggered. |

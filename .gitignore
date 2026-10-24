@@ -3,3 +3,8 @@
 .env.local
 compose.override.yaml
 backend/data/
+
+# Shared CI checkout and run identity, never application source.
+/.clouseau-ci/
+/.clouseau-selection/
+/work/clouseau-engine.json

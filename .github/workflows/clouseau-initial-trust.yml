@@ -1,0 +1,42 @@
+name: Initial Clouseau trust verification
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+  issues: read
+
+concurrency:
+  group: kolibri-initial-trust-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  initial-trust:
+    if: contains(github.event.pull_request.body, 'clouseau-installation-review:v1')
+    runs-on: [self-hosted, linux, x64, helix, private, pool]
+    timeout-minutes: 70
+    steps:
+      - name: Load frozen released initial trust checker
+        uses: actions/checkout@v4
+        with:
+          repository: gaulatti/clouseau
+          ref: 29eab7152004a42b14c029cd7f1eadb4d7c647c1
+          path: shared-clouseau
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify initial trust and independent CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INITIAL_REPOSITORY: ${{ github.repository }}
+          INITIAL_PULL_REQUEST: ${{ github.event.pull_request.number }}
+        run: >-
+          node shared-clouseau/bin/clouseau.cjs installation-check
+          --repository "$INITIAL_REPOSITORY"
+          --pull-request "$INITIAL_PULL_REQUEST"

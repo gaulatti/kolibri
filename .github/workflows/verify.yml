@@ -2,19 +2,57 @@ name: Verification
 
 on:
   pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review, edited]
   push:
+  issue_comment:
+    types: [created]
   workflow_dispatch:
+    inputs:
+      pull_request:
+        description: PR number to request a trusted PR-event reassessment
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
 
 concurrency:
-  group: kolibri-verify-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  group: kolibri-verify-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || inputs.pull_request || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  resolve-clouseau:
+    runs-on: [self-hosted, linux, x64, helix, private, pool]
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      sha: ${{ steps.engine.outputs.sha }}
+      digest: ${{ steps.engine.outputs.digest }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - id: engine
+        uses: gaulatti/clouseau/scripts/resolve@f5b6f04a5b95090fc0b5dc0e6fec85cc426273f0
+        with:
+          provenance: summary
+
   verify:
-    name: verify
+    name: ${{ ((github.event_name == 'push' && !github.event.deleted) || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.pull_request == '')) && 'verify' || 'metadata-only' }}
+    if: >-
+      (github.event_name == 'push' && !github.event.deleted) ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' && inputs.pull_request == '')
+    needs: [resolve-clouseau]
+    env:
+      CLOUSEAU_ENGINE_SHA: ${{ needs.resolve-clouseau.outputs.sha }}
+      CLOUSEAU_ENGINE_DIGEST: ${{ needs.resolve-clouseau.outputs.digest }}
     runs-on: [self-hosted, linux, x64, helix, private, pool]
     timeout-minutes: 30
     steps:
@@ -68,20 +106,145 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: gaulatti/clouseau
-          ref: c4e07381a288fc74200fd712f04ac3265ef2184a
-          path: .clouseau-engine
+          ref: ${{ needs.resolve-clouseau.outputs.sha || '0000000000000000000000000000000000000000' }}
+          path: .clouseau-ci
           persist-credentials: false
+      - name: Verify this run frozen shared engine
+        uses: ./.clouseau-ci
+        with:
+          operation: verify-engine
       - name: Enforce 100% line and branch coverage
         shell: bash
         run: |
           set -euo pipefail
           report="$RUNNER_TEMP/kolibri-native-coverage.json"
-          python3 .clouseau-engine/src/coverage_plan.py .clouseau-local.json "$GITHUB_WORKSPACE" | tee "$report"
+          python3 .clouseau-ci/src/coverage_plan.py .clouseau-local.json "$GITHUB_WORKSPACE" | tee "$report"
           {
             printf '### Complete application native coverage\n\n'
             printf 'Candidate: `%s`\n\n' "$(git rev-parse HEAD)"
-            printf 'Shared Clouseau: `c4e07381a288fc74200fd712f04ac3265ef2184a`\n\n'
+            printf 'Shared Clouseau: `%s`\n\nEngine digest: `%s`\n\n' "$CLOUSEAU_ENGINE_SHA" "$CLOUSEAU_ENGINE_DIGEST"
             printf '```json\n'
             cat "$report"
             printf '\n```\n'
           } >> "$GITHUB_STEP_SUMMARY"
+
+  assess-intent:
+    if: github.event_name == 'pull_request_target' && !github.event.pull_request.draft
+    needs: [resolve-clouseau]
+    env:
+      CLOUSEAU_ENGINE_SHA: ${{ needs.resolve-clouseau.outputs.sha }}
+      CLOUSEAU_ENGINE_DIGEST: ${{ needs.resolve-clouseau.outputs.digest }}
+    runs-on: [self-hosted, linux, x64, helix, private, pool]
+    timeout-minutes: 70
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+      issues: read
+    outputs:
+      assessment: ${{ steps.assess.outputs.assessment }}
+      review-record: ${{ steps.assess.outputs.review-record }}
+    steps:
+      - name: Load accepted base configuration only
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Load this run frozen shared engine
+        uses: actions/checkout@v4
+        with:
+          repository: gaulatti/clouseau
+          ref: ${{ needs.resolve-clouseau.outputs.sha || '0000000000000000000000000000000000000000' }}
+          path: .clouseau-ci
+          persist-credentials: false
+      - uses: ./.clouseau-ci
+        id: assess
+        with:
+          operation: assess
+          wait-for-verification: 'true'
+          record-transport: job-output
+          provider-key: ${{ secrets.DEEPSEEK_API_KEY }}
+          typesafe-key: ${{ secrets.TYPESAFE_API_KEY }}
+
+  approve-and-merge:
+    name: ${{ (github.event_name == 'pull_request_target' && !github.event.pull_request.draft) && 'approve-and-merge' || 'metadata-only-approval' }}
+    if: always() && github.event_name == 'pull_request_target' && !github.event.pull_request.draft
+    needs: [resolve-clouseau, assess-intent]
+    env:
+      CLOUSEAU_ENGINE_SHA: ${{ needs.resolve-clouseau.outputs.sha }}
+      CLOUSEAU_ENGINE_DIGEST: ${{ needs.resolve-clouseau.outputs.digest }}
+    runs-on: [self-hosted, linux, x64, helix, private, pool]
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+    concurrency:
+      group: kolibri-approval-${{ github.event.pull_request.number || inputs.pull_request || github.run_id }}
+      cancel-in-progress: false
+    steps:
+      - name: Require a completed assessment
+        if: >-
+          needs.assess-intent.result != 'success'
+        run: exit 1
+      - name: Load accepted base configuration only
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha || 'main' }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Load this run frozen shared engine
+        uses: actions/checkout@v4
+        with:
+          repository: gaulatti/clouseau
+          ref: ${{ needs.resolve-clouseau.outputs.sha || '0000000000000000000000000000000000000000' }}
+          path: .clouseau-ci
+          persist-credentials: false
+      - uses: ./.clouseau-ci
+        with:
+          operation: gate
+          native-gate: 'true'
+          assessment: ${{ needs.assess-intent.outputs.assessment }}
+          record-transport: job-output
+          review-record: ${{ needs.assess-intent.outputs.review-record }}
+
+  request-reassessment:
+    if: >-
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '/approve-intent ')) ||
+      (github.event_name == 'workflow_dispatch' && inputs.pull_request != '')
+    needs: [resolve-clouseau]
+    env:
+      CLOUSEAU_ENGINE_SHA: ${{ needs.resolve-clouseau.outputs.sha }}
+      CLOUSEAU_ENGINE_DIGEST: ${{ needs.resolve-clouseau.outputs.digest }}
+    runs-on: [self-hosted, linux, x64, helix, private, pool]
+    timeout-minutes: 3
+    permissions:
+      contents: read
+      pull-requests: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Load this run frozen shared engine
+        uses: actions/checkout@v4
+        with:
+          repository: gaulatti/clouseau
+          ref: ${{ needs.resolve-clouseau.outputs.sha || '0000000000000000000000000000000000000000' }}
+          path: .clouseau-ci
+          persist-credentials: false
+      - uses: ./.clouseau-ci
+        with:
+          operation: request-reassessment
+          pull-request: ${{ inputs.pull_request }}

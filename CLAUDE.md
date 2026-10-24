@@ -36,10 +36,18 @@ Before opening a ready pull request:
    body. Enrollment requires accepted protected configuration; public enrollment
    metadata alone belongs in source. Never expose private signing material.
 
-The initial installation is currently blocked as recorded in
-`docs/clouseau-installation.md`. Proposed policy or verification files are not
-trusted protected-base configuration. Do not fabricate a receipt, claim this
-preparation is an installed integration, open an ordinary ready PR without
-required local review, or bypass protection to install it. Resolve the supported
-bootstrap dependency first. Human decisions are for purpose, authority and
-meaningful product/risk tradeoffs; routine code inspection belongs to agents.
+The released initial-installation procedure is separate from ordinary review:
+freeze the complete candidate with `clouseau installation-prepare`, obtain its
+explicit native administrator grant, then use `installation-review` and
+`installation-publish`. Include the returned installation marker in the initial
+ready PR body. This authorization is initial trust enrollment, not ordinary PR
+approval. The independent checker belongs in a separate workflow and waits for
+real successful PR-event verification. Initial owner acceptance is manual.
+
+This candidate is currently blocked by the shared complete-evidence capacity
+limit recorded in `docs/clouseau-installation.md`. Do not request a grant, run
+or resample a review, or open a PR while that deterministic blocker remains.
+Proposed enrollment and configuration are not accepted base trust. Do not
+fabricate evidence, omit sources, claim this preparation is installed, or bypass
+protection. Human decisions are for purpose, authority and meaningful
+product/risk tradeoffs; routine code inspection belongs to agents.

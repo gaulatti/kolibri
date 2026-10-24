@@ -16,8 +16,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  resolve-clouseau:
+    if: contains(github.event.pull_request.body, 'clouseau-installation-review:v1')
+    runs-on: [self-hosted, linux, x64, helix, private, pool]
+    timeout-minutes: 5
+    outputs:
+      sha: ${{ steps.engine.outputs.sha }}
+      digest: ${{ steps.engine.outputs.digest }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - id: engine
+        uses: gaulatti/clouseau/scripts/resolve@f5b6f04a5b95090fc0b5dc0e6fec85cc426273f0
+        with:
+          provenance: summary
+
   initial-trust:
     if: contains(github.event.pull_request.body, 'clouseau-installation-review:v1')
+    needs: [resolve-clouseau]
+    env:
+      CLOUSEAU_ENGINE_SHA: ${{ needs.resolve-clouseau.outputs.sha }}
+      CLOUSEAU_ENGINE_DIGEST: ${{ needs.resolve-clouseau.outputs.digest }}
     runs-on: [self-hosted, linux, x64, helix, private, pool]
     timeout-minutes: 70
     steps:
@@ -25,18 +45,22 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: gaulatti/clouseau
-          ref: 29eab7152004a42b14c029cd7f1eadb4d7c647c1
-          path: shared-clouseau
+          ref: ${{ needs.resolve-clouseau.outputs.sha || '0000000000000000000000000000000000000000' }}
+          path: .clouseau-ci
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify this run frozen initial checker
+        uses: ./.clouseau-ci
+        with:
+          operation: verify-engine
       - name: Verify initial trust and independent CI
         env:
           GH_TOKEN: ${{ github.token }}
           INITIAL_REPOSITORY: ${{ github.repository }}
           INITIAL_PULL_REQUEST: ${{ github.event.pull_request.number }}
         run: >-
-          node shared-clouseau/bin/clouseau.cjs installation-check
+          node .clouseau-ci/bin/clouseau.cjs installation-check
           --repository "$INITIAL_REPOSITORY"
           --pull-request "$INITIAL_PULL_REQUEST"

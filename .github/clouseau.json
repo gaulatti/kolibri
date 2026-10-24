@@ -17,6 +17,8 @@
       "Verify contract build determinism",
       "Test conformance with exact native coverage",
       "Verify black-box conformance",
+      "Verify this run frozen shared engine",
+      "Select accepted coverage recipe as data",
       "Enforce 100% line and branch coverage"
     ]
   },

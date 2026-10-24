@@ -61,6 +61,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
+          fetch-depth: 0
       - name: Confirm exact candidate
         env:
           CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -113,12 +114,42 @@ jobs:
         uses: ./.clouseau-ci
         with:
           operation: verify-engine
+      - name: Select accepted coverage recipe as data
+        shell: bash
+        env:
+          ACCEPTED_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          INITIAL_INSTALL_QUALIFICATION: >-
+            ${{ (github.event_name == 'push' && github.ref == 'refs/heads/ci/clouseau-supported-integration-20261024' && github.actor == 'gaulatti') ||
+            (github.event_name == 'pull_request' && github.event.pull_request.user.login == 'gaulatti' &&
+            github.event.pull_request.head.repo.full_name == github.repository &&
+            contains(github.event.pull_request.body, 'clouseau-installation-review:v1')) }}
+        run: |
+          set -euo pipefail
+          base="$ACCEPTED_BASE_SHA"
+          if [[ -z "$base" ]]; then
+            base="$(git rev-parse --verify 'origin/main^{commit}')"
+          fi
+          [[ "$base" =~ ^[a-f0-9]{40}$ ]]
+          git cat-file -e "$base^{commit}"
+          entry="$(git ls-tree "$base" -- .clouseau-local.json)"
+          if [[ -n "$entry" ]]; then
+            git show "$base:.clouseau-local.json" > "$RUNNER_TEMP/clouseau-coverage.json"
+            message="Coverage recipe: immutable accepted base $base; proposed recipe changes cannot narrow this run's source inventory."
+          else
+            policy_entry="$(git ls-tree "$base" -- .github/clouseau.json)"
+            test -z "$policy_entry"
+            test "$INITIAL_INSTALL_QUALIFICATION" = true
+            git show HEAD:.clouseau-local.json > "$RUNNER_TEMP/clouseau-coverage.json"
+            message="INITIAL INSTALLATION QUALIFICATION ONLY: base $base has no recipe. Candidate data grants no review or trust authority; the separate signed initial trust checker is mandatory before installation acceptance."
+          fi
+          printf '%s\n' "$message"
+          printf '%s\n\n' "$message" >> "$GITHUB_STEP_SUMMARY"
       - name: Enforce 100% line and branch coverage
         shell: bash
         run: |
           set -euo pipefail
           report="$RUNNER_TEMP/kolibri-native-coverage.json"
-          python3 .clouseau-ci/src/coverage_plan.py .clouseau-local.json "$GITHUB_WORKSPACE" | tee "$report"
+          python3 .clouseau-ci/src/coverage_plan.py "$RUNNER_TEMP/clouseau-coverage.json" "$GITHUB_WORKSPACE" | tee "$report"
           {
             printf '### Complete application native coverage\n\n'
             printf 'Candidate: `%s`\n\n' "$(git rev-parse HEAD)"

@@ -39,7 +39,11 @@ performs authenticated independent local review, then publishes installation-onl
 signed evidence before a ready PR. Its separate read-only checker requires real
 successful PR-event verification and returns manual owner acceptance, never
 ordinary approval or automatic merge. No grant, review, receipt or PR has been
-created for this candidate.
+created for this candidate. The separate initial checker now freezes protected
+Clouseau main through its own resolver, verifies the selected content digest,
+and delegates exact manifest/engine equality to the shared checker. A later
+released capacity repair can reach it without changing a consumer engine pin;
+an engine mismatch still rejects old evidence and requires a fresh review.
 
 A deterministic complete-evidence capacity blocker remains. Against protected
 base `fe39ef5b63110598b0e8ff0b73574f28cf98ec6d`, the earlier fully committed
@@ -134,6 +138,17 @@ is retained in the Actions log and job summary. It has no provider key,
 approval/merge permission or deployment step.
 Push checks establish candidate verification only; the eventual PR-event check,
 trusted review, signed evidence and manual merge still need their own proof.
+
+Ordinary coverage validation reads `.clouseau-local.json` from the immutable
+accepted PR base. Feature pushes use the freshly fetched `origin/main`. Proposed
+recipe edits cannot narrow that source inventory. The helper reads configuration
+only as data and never executes its verification argument arrays. Only when
+both recipe and CI policy are absent may explicit initial qualification use the
+committed candidate recipe: the authorized owner installation branch, or an
+internal owner-authored PR bearing the installation receipt marker. That marker
+selects qualification; it grants no trust or approval. The separate signed
+initial checker remains mandatory before initial owner acceptance. Missing base
+objects, existing CI policy without a recipe and unqualified fallback fail.
 
 The first hosted push
 [run 40134744162](https://github.com/gaulatti/kolibri/actions/runs/40134744162)

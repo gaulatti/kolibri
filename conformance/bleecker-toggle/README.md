@@ -17,6 +17,7 @@ From the repository root:
 ```sh
 npm --prefix contract run validate
 npm --prefix conformance/bleecker-toggle test
+npm --prefix conformance/bleecker-toggle run test:coverage
 npm --prefix conformance/bleecker-toggle run conform
 ```
 
@@ -39,3 +40,11 @@ FAIL $.metadata.schemaVersion=2.0.0; supported=1.0.0; release=0.1.0
 
 The [portability decision](../../docs/bleecker-toggle-conformance.md) explains
 the family rationale, fixture inventory, consumer ownership, and reuse guidance.
+
+The coverage command uses pinned native c8 instrumentation for every module in
+`src`, includes child-process execution, and fails unless line and branch
+coverage are exactly 100%. It writes native JSON to ignored `coverage/`.
+Negative tests cover missing arguments/metadata, immutable-validator rejection
+and missing diagnostics, asset traversal, semantic drift, and bounded failures.
+Importing the module for its pure failure/path boundaries does not execute the
+CLI; direct execution, including a copied clean consumer, retains the same proof.

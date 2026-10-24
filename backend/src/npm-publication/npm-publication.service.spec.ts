@@ -90,6 +90,18 @@ describe('NpmPublicationService', () => {
     expect(JSON.stringify(failure)).not.toContain(token);
   });
 
+  it('retains registry HTTP status when a denied lookup has no response body', async () => {
+    registryFetch.mockResolvedValueOnce(new Response('', { status: 403 }));
+    await expect(
+      service.resolveNextVersion('@kolibri/ui'),
+    ).rejects.toMatchObject({
+      name: 'NpmRegistryRequestError',
+      statusCode: 403,
+      stderr: undefined,
+    });
+    expect(run).not.toHaveBeenCalled();
+  });
+
   it('increments the highest version already assigned by kolibri', async () => {
     await expect(
       service.resolveNextVersion('@kolibri/ui', undefined, '2.4.9'),

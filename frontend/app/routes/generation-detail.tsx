@@ -199,7 +199,6 @@ export default function GenerationDetail({ params }: Route.ComponentProps) {
   );
 
   async function downloadArtifact() {
-    if (!canDownload) return;
     setDownloadPending(true);
     setDownloadError(null);
     try {
@@ -455,7 +454,7 @@ export default function GenerationDetail({ params }: Route.ComponentProps) {
                   {run.artifactAvailable ? (
                     <Button
                       type="button"
-                      onClick={downloadArtifact}
+                      onClick={canDownload ? downloadArtifact : undefined}
                       loading={downloadPending}
                       disabled={!canDownload && !downloadPending}
                     >

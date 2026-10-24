@@ -245,6 +245,36 @@ describe('DashboardService', () => {
     expect(report.summary.medianDurationMs).toBeNull();
     expect(report.generationEfficiency).toEqual([]);
   });
+
+  it('keeps a recent clean system healthy and labels a concurrently removed system safely', async () => {
+    const recent = run({
+      id: 'recent',
+      designSystemId: firstId,
+      status: GenerationRunStatus.SUCCEEDED,
+      createdAt: '2026-08-03T08:00:00Z',
+      durationMs: 1000,
+    });
+    const removed = run({
+      id: 'removed',
+      designSystemId: 'removed-design-system',
+      status: GenerationRunStatus.SUCCEEDED,
+      createdAt: '2026-08-03T08:00:00Z',
+      durationMs: 2000,
+    });
+    findDesignSystems.mockResolvedValue([designSystem(firstId, 'Healthy')]);
+    findRuns.mockResolvedValue([recent]);
+    getMany.mockResolvedValue([recent, removed]);
+    const report = await service.report(owner);
+    expect(report.designSystems[0]).toMatchObject({
+      health: 'healthy',
+      attentionReason: null,
+    });
+    expect(report.generationEfficiency[1]).toMatchObject({
+      runId: 'removed',
+      designSystemName: 'Design system',
+      durationMs: 2000,
+    });
+  });
 });
 
 function chainableBuilder(
@@ -276,6 +306,7 @@ function designSystem(id: string, name: string): DesignSystem {
     ownerId: owner.userReferenceId,
     name,
     description: null,
+    generationContract: 'legacy',
     lastPublishedVersion: null,
     createdAt: new Date('2026-07-01T00:00:00.000Z'),
     updatedAt: new Date('2026-07-01T00:00:00.000Z'),
@@ -311,6 +342,7 @@ function run({
     designSystemId,
     designSystem: designSystem(designSystemId, 'Design system'),
     status,
+    generationContract: 'legacy',
     startedAt,
     completedAt: new Date(startedAt.getTime() + durationMs),
     packageName: '@kolibri/system',

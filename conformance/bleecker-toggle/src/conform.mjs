@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { existsSync, realpathSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -36,7 +37,7 @@ function visit(nodes, callback) {
   }
 }
 
-function safeAssetPath(assetRoot, uri) {
+export function safeAssetPath(assetRoot, uri) {
   const target = resolve(assetRoot, uri);
   const pathFromRoot = relative(assetRoot, target);
   if (isAbsolute(pathFromRoot) || pathFromRoot === '..' || pathFromRoot.startsWith(`..${sep}`)) {
@@ -195,8 +196,14 @@ async function main() {
   console.log(`portable=${actual.portability.contractGuarantees.length} consumer-owned=${actual.portability.consumerOwned.length}`);
 }
 
-main().catch((error) => {
+export function failureMessage(error) {
   const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`${message.startsWith('FAIL ') ? message : `FAIL ${message}`}\n`);
-  process.exitCode = 1;
-});
+  return message.startsWith('FAIL ') ? message : `FAIL ${message}`;
+}
+
+if (process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    process.stderr.write(`${failureMessage(error)}\n`);
+    process.exitCode = 1;
+  });
+}

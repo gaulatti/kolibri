@@ -168,4 +168,12 @@ describe('GenerationHistoryReportService', () => {
     });
     expect(report.columns.length).toBeGreaterThan(1);
   });
+
+  it('reports descending order for an omitted optional sort direction', async () => {
+    const filters = new GenerationHistoryQueryDto();
+    delete (filters as Partial<GenerationHistoryQueryDto>).sortDirection;
+    const report = await service.generate(owner, filters);
+    expect(report.appliedFilters.sortDirection).toBe(HistorySortDirection.DESC);
+    expect(search).toHaveBeenCalledWith(owner, filters);
+  });
 });

@@ -20,6 +20,7 @@ const view: DesignSystemView = {
   name: 'Kolibri UI',
   description: 'Shared application components',
   generationContract: 'composable-v1',
+  lastPublishedVersion: null,
   createdAt: new Date('2026-08-01T12:00:00.000Z'),
   updatedAt: new Date('2026-08-01T12:00:00.000Z'),
 };
@@ -53,7 +54,7 @@ describe('design-system route registration', () => {
         { provide: APP_GUARD, useClass: TestAuthenticatedGuard },
       ],
     }).compile();
-    app = module.createNestApplication<App>();
+    app = module.createNestApplication<INestApplication<App>>();
     app.useGlobalPipes(createGlobalValidationPipe());
     await app.init();
     httpServer = app.getHttpServer();

@@ -87,6 +87,42 @@ describe('DesignSystemsService', () => {
     });
   });
 
+  it('preserves an explicitly selected legacy contract and stores absent descriptions as null', async () => {
+    const designSystem = record({
+      description: null,
+      generationContract: 'legacy',
+    });
+    create.mockReturnValue(designSystem);
+    save.mockResolvedValue(designSystem);
+    await expect(
+      service.create(owner, {
+        name: 'Legacy UI',
+        generationContract: 'legacy',
+      }),
+    ).resolves.toMatchObject({
+      description: null,
+      generationContract: 'legacy',
+    });
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: null,
+        generationContract: 'legacy',
+      }),
+    );
+  });
+
+  it('preserves an omitted description and clears an explicitly blank description', async () => {
+    const designSystem = record();
+    findOne.mockResolvedValue(designSystem);
+    save.mockImplementation((value: DesignSystem) => Promise.resolve(value));
+    await expect(
+      service.update(owner, designSystem.id, { name: 'Renamed UI' }),
+    ).resolves.toMatchObject({ description: 'Shared application components' });
+    await expect(
+      service.update(owner, designSystem.id, { description: '  ' }),
+    ).resolves.toMatchObject({ description: null });
+  });
+
   it('updates an owned record without changing ownership', async () => {
     const designSystem = record();
     findOne.mockResolvedValue(designSystem);

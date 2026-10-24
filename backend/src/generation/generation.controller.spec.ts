@@ -78,7 +78,7 @@ describe('generation route registration and ownership', () => {
         { provide: APP_GUARD, useClass: TestAuthenticatedGuard },
       ],
     }).compile();
-    app = module.createNestApplication<App>();
+    app = module.createNestApplication<INestApplication<App>>();
     app.useGlobalPipes(createGlobalValidationPipe());
     await app.init();
     httpServer = app.getHttpServer();
@@ -254,4 +254,18 @@ describe('generation route registration and ownership', () => {
       .expect(404);
     expect(stream).not.toHaveBeenCalled();
   });
+
+  it.each([
+    [GenerationRunStatus.FAILED, true],
+    [GenerationRunStatus.RUNNING, false],
+  ])(
+    'keeps SSE terminal behavior consistent for %s runs',
+    async (status, terminal) => {
+      getOwnedRun.mockResolvedValueOnce({ ...runView, status });
+      await request(httpServer)
+        .get(`/v1/generations/${runId}/events`)
+        .expect(200);
+      expect(stream).toHaveBeenCalledWith(runId, terminal);
+    },
+  );
 });

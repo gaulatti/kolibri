@@ -110,7 +110,6 @@ export function DesignSystemHistory({
   }
 
   async function downloadArtifact(id: string) {
-    if (downloadId) return;
     setDownloadId(id);
     setDownloadError(null);
     try {
@@ -274,7 +273,7 @@ export function DesignSystemHistory({
                         variant="secondary"
                         size="sm"
                         type="button"
-                        onClick={() => downloadArtifact(item.id)}
+                        onClick={downloadId ? undefined : () => downloadArtifact(item.id)}
                         loading={downloadId === item.id}
                         disabled={Boolean(downloadId && downloadId !== item.id)}
                       >

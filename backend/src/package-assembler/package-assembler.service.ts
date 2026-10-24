@@ -91,8 +91,8 @@ export class PackageAssemblerService {
     packageName: string,
     packageVersion: string,
     packageRegistry: string,
-    packageDescription?: string | null,
-    generationContract: 'legacy' | 'composable-v1' = 'legacy',
+    packageDescription: string | null | undefined,
+    generationContract: 'legacy' | 'composable-v1',
   ): string {
     return `${JSON.stringify(
       {
@@ -152,9 +152,7 @@ export class PackageAssemblerService {
     )}\n`;
   }
 
-  private tsconfig(
-    generationContract: 'legacy' | 'composable-v1' = 'legacy',
-  ): string {
+  private tsconfig(generationContract: 'legacy' | 'composable-v1'): string {
     return `${JSON.stringify(
       {
         compilerOptions: {

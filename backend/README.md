@@ -102,6 +102,17 @@ npm run build
 npm test -- --runInBand
 ```
 
+For complete local verification, also run `npm run test:types` and
+`npm run test:cov`. Coverage uses the same full-program TypeScript compiler as
+the application build, then Jest's native Istanbul instrumentation with inline
+source maps back to every executable module under `src/`. It measures unloaded
+modules as well as imported code and excludes only test files. The command
+cleans its ignored `.test-build/` output before compilation, writes the native
+`coverage/coverage-final.json`, and fails unless line, branch, statement and
+function coverage are exactly 100%. Tests retain the real Nest module graph,
+HTTP authorization boundaries and SQLite persistence checks; external provider
+failure paths use deterministic dependency-boundary fixtures.
+
 Direct development startup still requires PostgreSQL. By default local mode
 targets the Compose hostname `postgres`; set `DATABASE_HOST`, `DATABASE_PORT`,
 `DATABASE_NAME`, `DATABASE_USER`, and `DATABASE_PASSWORD` to use a PostgreSQL

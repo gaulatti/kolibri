@@ -1,0 +1,81 @@
+name: Verification
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: kolibri-verify-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out exact candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Confirm exact candidate
+        env:
+          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+            contract/package-lock.json
+      - name: Install backend dependencies
+        run: npm --prefix backend ci
+      - name: Install frontend dependencies
+        run: npm --prefix frontend ci
+      - name: Install contract verification dependencies
+        run: npm --prefix contract ci
+      - name: Check backend and test types
+        run: npm --prefix backend run test:types
+      - name: Build backend
+        run: npm --prefix backend run build
+      - name: Test backend with exact native coverage
+        run: npm --prefix backend run test:cov
+      - name: Check frontend types
+        run: npm --prefix frontend run typecheck
+      - name: Test frontend with exact native coverage
+        run: npm --prefix frontend run test:coverage
+      - name: Build frontend
+        run: npm --prefix frontend run build
+      - name: Test contract with exact native coverage
+        run: npm --prefix contract run test:coverage
+      - name: Validate immutable contract release
+        run: npm --prefix contract run validate
+      - name: Verify contract build determinism
+        run: npm --prefix contract run verify:determinism
+      - name: Test conformance with exact native coverage
+        run: npm --prefix conformance/bleecker-toggle run test:coverage
+      - name: Verify black-box conformance
+        run: npm --prefix conformance/bleecker-toggle run conform
+      - name: Preserve native verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kolibri-native-coverage-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          path: |
+            backend/coverage/coverage-final.json
+            backend/coverage/coverage-summary.json
+            frontend/coverage/coverage-final.json
+            frontend/coverage/coverage-summary.json
+            contract/coverage/coverage-final.json
+            contract/coverage/coverage-summary.json
+            conformance/bleecker-toggle/coverage/coverage-final.json
+            conformance/bleecker-toggle/coverage/coverage-summary.json

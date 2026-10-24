@@ -64,7 +64,7 @@ describe('CognitoAuthGuard', () => {
       guard.canActivate(
         executionContext(
           request,
-          new GenerationController({} as never),
+          new GenerationController({} as never, {} as never, {} as never),
           generationHandler,
         ),
       ),
@@ -80,7 +80,7 @@ describe('CognitoAuthGuard', () => {
       guard.canActivate(
         executionContext(
           request,
-          new GenerationController({} as never),
+          new GenerationController({} as never, {} as never, {} as never),
           generationHandler,
         ),
       ),
@@ -101,7 +101,7 @@ describe('CognitoAuthGuard', () => {
       guard.canActivate(
         executionContext(
           request,
-          new GenerationController({} as never),
+          new GenerationController({} as never, {} as never, {} as never),
           generationHandler,
         ),
       ),

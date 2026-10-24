@@ -1,12 +1,20 @@
 # Clouseau installation readiness
 
-Status: preparation only, not an installed or accepted integration. Audited on
+Status: local verification implemented; hosted integration not accepted. Audited on
 2026-10-24 against remote `main` at
 `fe39ef5b63110598b0e8ff0b73574f28cf98ec6d`.
 
 ## Supported shared implementation
 
-The public protected-main channel inspected was Clouseau
+Native coverage acceptance was verified with protected Clouseau main
+[`7d350031a5172282fae462cdaa2416c424c5c16f`](https://github.com/gaulatti/clouseau/commit/7d350031a5172282fae462cdaa2416c424c5c16f),
+with engine digest
+`495da50549927a87e46227504505278932c6b437a67a1eeffddb5c3abb8f9768`.
+This revision includes protocol-v2 code-owner merge enforcement, review
+completeness and convergence. Its recipe still accepts one coverage report and
+one source directory, and consumers still pin a reviewed full engine SHA.
+
+The initial public protected-main channel inspected was Clouseau
 [`4f441cb5abba0600cfad1b86adb561f347e93d96`](https://github.com/gaulatti/clouseau/commit/4f441cb5abba0600cfad1b86adb561f347e93d96),
 with engine digest
 `efc1e48363f73edd317dc61a231ab2fa01b0808d8a53ff6c0f6a9c7c2a5c3691`.
@@ -19,6 +27,82 @@ review protocol. Its [local-review documentation](https://github.com/gaulatti/cl
 requires a verification recipe and public signing enrollment from the accepted
 protected base. Proposed files cannot establish their own trust. No supported
 generic first-consumer bootstrap procedure was available in this revision.
+
+The owner subsequently confirmed that these repositories must remain private.
+When protection is unavailable, the owner permits a supported manual-merge path
+with automatic merge disabled and unchanged tests, exact coverage and AI review
+requirements. This supersedes the original requirement to wait for a GitHub plan
+upgrade. It does not turn an unavailable shared manual-review mode or bootstrap
+into an accepted consumer-side workaround. The subsequently released
+[`ae6ae025c5a5e13bc2910602acf5c33838babbfa`](https://github.com/gaulatti/clouseau/commit/ae6ae025c5a5e13bc2910602acf5c33838babbfa)
+supports accepted protocol-v2 `merge_mode: "manual"`, verifies the exact private
+plan limitation and auto-merge-disabled setting, and preserves the other gates.
+Its engine digest is
+`134c49428a14a51e1ead6ab622a79759e46ad2c6e9a7547da7d7a267dddf396f`.
+Kolibri's current auto-merge setting is disabled; visibility, branch settings and
+deployment controls were preserved.
+
+## Resumed verification
+
+The frontend now has 241 deterministic behavior tests. All pass, as do its type
+check and production build. Native V8 measures every one of the 39 TypeScript and
+TSX application source entries, with no production exclusions:
+
+- **918/918 lines**
+- **806/806 branches**
+- **1,020/1,020 statements**
+- **270/270 functions**
+
+The released shared `coverage` checker independently accepts the unmodified
+native `frontend/coverage/coverage-final.json` against `frontend/app`, reporting
+the same exact line and branch counts. The ESM-only Bleecker re-export barrel
+and declarative route table remain present in the native inventory with empty
+counter maps; they have not been omitted or assigned invented counters.
+
+Tests exercise public authentication and API boundaries, credential isolation,
+configuration, collection/create/edit/delete workflows, explicit publication,
+saved report filters, SSE reconnection, replay deduplication, stale terminal
+status protection, private artifacts, and component fixtures. DOM tests are not
+live-browser evidence. The real Bleecker dashboard wrappers remain in use; only
+their underlying SVG engine uses an explicit input/formatter contract fixture.
+
+Narrow source changes make the state boundaries explicit without weakening
+behavior: refresh receives the already validated token from its sole caller;
+credential state updates share one pure transition that preserves independent
+fields; unavailable/in-flight downloads bind no action; and the SSE parser uses
+the guaranteed final element returned by `String.split`. Behavioral tests retain
+the sign-out, invalid-input, concurrent-download and late-response obligations.
+
+All four product areas pass native exact coverage on the CI runtime, Node
+22.23.4:
+
+| Product area | Tests | Lines | Branches |
+| --- | ---: | ---: | ---: |
+| Backend | 392 across 62 suites | 2,761/2,761 | 1,991/1,991 |
+| Frontend | 241 | 918/918 | 806/806 |
+| Neutral contract source and immutable release | 94 | 338/338 | 225/225 |
+| Black-box conformance | 13 | 209/209 | 70/70 |
+
+The backend now compiles source and tests through the production TypeScript
+compiler before native Istanbul measurement. This avoids testing decorator
+metadata branches introduced only by ts-jest's isolated per-file compilation.
+Its inventory retains every production source; test fixtures are type-checked
+instead of suppressing diagnostics. All 119 emitted production module bodies
+match the coverage compilation, differing only in source-map comments. The
+immutable neutral-contract release remains byte-identical. Native coverage and
+the shared engine's inventory acceptance remain separate checks: the current
+shared checker still demands counters for backend specs and type-only `.ts`
+modules that contain no application execution. No counters were fabricated.
+
+The thin `.github/workflows/verify.yml` runs these real commands on disposable
+GitHub-hosted Node 22 runners, checks out the exact event candidate, uses a
+read-only token without persisted checkout credentials, and retains native
+reports. It has no provider key, approval/merge permission or deployment step.
+Push checks establish candidate verification only; the eventual PR-event check,
+trusted review, signed evidence and manual merge still need their own proof.
+
+The original negative baseline below is retained as historical evidence. It is
+not the current frontend result.
 
 ## Repository audit
 
@@ -42,7 +126,7 @@ Existing successful hosted conformance evidence predates this preparation:
 [run 34060592268](https://github.com/gaulatti/kolibri/actions/runs/34060592268).
 It proves neither Clouseau acceptance nor complete application coverage.
 
-## Complete source inventory and native verification
+## Initial source inventory and native baseline
 
 The tracked source inventory at the audited base contains:
 
@@ -54,9 +138,9 @@ The tracked source inventory at the audited base contains:
 | Conformance | One module under `conformance/bleecker-toggle/src`. | Black-box Node tests and actual conformity check. |
 | Infrastructure | Eleven `.ts` files under `infrastructure/bin` and `infrastructure/lib`. | Existing build/tests; no CDK command, synthesis or deployment executed in this installation task. |
 
-The existing backend configuration excludes modules, constants, types, entities,
+The initial backend configuration excluded modules, constants, types, entities,
 DTOs, entrypoints and other application paths and permits 90% branch coverage.
-That configuration does not meet the requested complete exact-coverage contract.
+That initial configuration did not meet the requested complete exact-coverage contract.
 A one-time native diagnostic used every backend `.ts` source except tests and
 raised all coverage thresholds to 100% without changing repository settings:
 
@@ -98,19 +182,25 @@ migration) is needed before this native layout can meet the supported protocol.
 
 ## Outstanding dependencies and delivery boundary
 
-1. Enable protected branches for this private repository through the account's
-   supported GitHub plan. Do not make Kolibri public to obtain this entitlement.
+1. Keep Kolibri private and automatic merge disabled. Use a released shared
+   manual-merge route that preserves tests, exact coverage and AI review when
+   GitHub cannot enforce protection. Do not simulate protection or bypass the
+   current controller's protection validation in consumer code.
 2. Release a generic initial consumer trust-enrollment procedure that can accept
    the first local recipe, policy, engine digest and public signer without
    trusting contributor-proposed controls or bypassing checks.
-3. Release code-owner-only automatic merge centrally. The inspected controller
-   arms auto-merge without complete affected-path ownership evaluation. Do not
-   activate it for Kolibri until the requested owner/non-owner policy is supported.
+3. Use protocol v2's now-released code-owner merge enforcement where protection
+   supports automatic merge. This capability is present in `7d350031`; it does
+   not grant Kolibri an exception from its explicit no-automatic-merge policy.
 4. Release the shared run-wide automatic engine upgrade mechanism. A fixed-pin
    installation must not be described as self-updating.
-5. Support this monorepo's complete native source inventory, close the demonstrated
-   backend coverage gaps with meaningful tests, and add real frontend tests and
-   native coverage. Do not omit production files or lower thresholds.
+5. Support this monorepo's complete native source inventory and retain exact
+   coverage for every product module. Frontend native coverage and the shared
+   parser now pass; the initial frontend testing gap is closed. Backend native
+   instrumentation and source-inventory acceptance are distinct checks. The
+   shared directory inventory still requires counters for colocated tests and
+   type-only `.ts` modules. Do not create counters for non-executable code, omit
+   executable production paths, or lower thresholds.
 6. After these dependencies, install the independently permissioned CI jobs,
    enroll public signer metadata, configure only the chosen provider's required
    secret, establish real required check sources, and demonstrate eligible

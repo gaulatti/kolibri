@@ -33,6 +33,50 @@ describe('PackageAssemblerService', () => {
     });
   });
 
+  it('loads explicit process package metadata through the command entry point', () => {
+    const name = process.env.KOLIBRI_PACKAGE_NAME;
+    const version = process.env.KOLIBRI_PACKAGE_VERSION;
+    process.env.KOLIBRI_PACKAGE_NAME = '@fixture/runtime-system';
+    process.env.KOLIBRI_PACKAGE_VERSION = '2.1.0';
+    try {
+      expect(loadGeneratedPackageConfig()).toEqual({
+        packageName: '@fixture/runtime-system',
+        packageVersion: '2.1.0',
+        packageDirectoryName: 'fixture-runtime-system',
+      });
+    } finally {
+      if (name === undefined) delete process.env.KOLIBRI_PACKAGE_NAME;
+      else process.env.KOLIBRI_PACKAGE_NAME = name;
+      if (version === undefined) delete process.env.KOLIBRI_PACKAGE_VERSION;
+      else process.env.KOLIBRI_PACKAGE_VERSION = version;
+    }
+  });
+
+  it('assembles composable styles without inventing image assets when none exist', () => {
+    const generated = assembler.assemblePackage({
+      packageName: '@fixture/no-images',
+      packageVersion: '1.0.0',
+      packageRegistry: 'https://registry.npmjs.org',
+      packageDirectoryName: 'no-images',
+      generationContract: 'composable-v1',
+      cssArtifact: { path: 'styles.css', content: '.x {}' },
+      reactArtifacts: [],
+    });
+    expect(
+      generated.find((file) => file.path === 'no-images/styles/kolibri.css')
+        ?.content,
+    ).toBe('.x {}');
+    expect(generated.some((file) => file.path.includes('/assets/'))).toBe(
+      false,
+    );
+    expect(
+      JSON.parse(
+        generated.find((file) => file.path === 'no-images/package.json')!
+          .content,
+      ).exports['./manifest'],
+    ).toBe('./kolibri.manifest.json');
+  });
+
   it('rejects package names that cannot form a safe directory', () => {
     expect(() =>
       loadGeneratedPackageConfig({ KOLIBRI_PACKAGE_NAME: '.' }),

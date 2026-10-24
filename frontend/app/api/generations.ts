@@ -222,7 +222,8 @@ async function consumeEventStream(
       const { done, value } = await reader.read();
       buffer += decoder.decode(value, { stream: !done });
       const records = buffer.split(/\r?\n\r?\n/);
-      buffer = records.pop() ?? "";
+      // String.split always returns at least one element, including for "".
+      buffer = records.pop()!;
       for (const record of records) emitRecord(record, onEvent);
       if (done) {
         if (buffer.trim()) emitRecord(buffer, onEvent);

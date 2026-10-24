@@ -81,7 +81,7 @@ describe('LocalGenerationStorage contract', () => {
 
   it('removes all stored material for a run', async () => {
     await storage.storeRawSnapshot(runId, { name: 'Fixture' });
-    await storage.removeRun(runId, null);
+    await storage.removeRun(runId);
     await expect(
       readFile(
         resolve(outputDirectory, 'runs', runId, 'raw', 'figma-file.json'),

@@ -513,7 +513,8 @@ function safeDiagnosticMessage(diagnostic: Diagnostic): string {
 function cleanDiagnosticText(value: string): string {
   return [...value]
     .map((character) => {
-      const codePoint = character.codePointAt(0) ?? 0;
+      // String iteration yields a nonempty code point, including astral Unicode.
+      const codePoint = character.codePointAt(0)!;
       return codePoint <= 31 || codePoint === 127 ? ' ' : character;
     })
     .join('')

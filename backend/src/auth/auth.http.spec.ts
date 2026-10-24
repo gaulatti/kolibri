@@ -52,7 +52,7 @@ describe('authentication HTTP boundary', () => {
         { provide: APP_GUARD, useClass: CognitoAuthGuard },
       ],
     }).compile();
-    app = module.createNestApplication<App>();
+    app = module.createNestApplication<INestApplication<App>>();
     await app.init();
     httpServer = app.getHttpServer();
   });

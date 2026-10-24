@@ -25,6 +25,18 @@ describe('storage configuration', () => {
     });
   });
 
+  it('uses a bounded five-minute download lifetime when production storage omits its optional TTL', () => {
+    expect(
+      storageConfiguration({
+        storage: { driver: 's3', bucket: 'fixture-private-bucket' },
+      }),
+    ).toEqual({
+      driver: 's3',
+      bucket: 'fixture-private-bucket',
+      presignedUrlTtlSeconds: 300,
+    });
+  });
+
   it('rejects missing or unsafe production storage settings', () => {
     expect(() => storageConfiguration({ postgresql: {} })).toThrow(
       'invalid storage settings',

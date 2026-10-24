@@ -118,7 +118,7 @@ class CognitoAuthClient {
       this.clearSession();
       throw new Error("Your session expired");
     }
-    await this.refresh();
+    await this.refresh(this.session.refreshToken, this.session.idToken);
     if (!this.session) throw new Error("Your session expired");
     return this.session.accessToken;
   }
@@ -171,10 +171,7 @@ class CognitoAuthClient {
     window.location.assign(url);
   }
 
-  private async refresh(): Promise<void> {
-    const refreshToken = this.session?.refreshToken;
-    const idToken = this.session?.idToken;
-    if (!refreshToken) throw new Error("Your session expired");
+  private async refresh(refreshToken: string, idToken?: string): Promise<void> {
     const configuration = getClientConfiguration();
     const response = await fetch(
       `${configuration.cognitoDomain}/oauth2/token`,

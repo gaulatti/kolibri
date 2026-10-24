@@ -235,8 +235,9 @@ function firstDescendantSolid(root: FigmaNode) {
 }
 
 function shadowCss(node: FigmaNode): string | undefined {
-  const effects = (node.effects ?? [])
-    .filter(
+  // The sole caller selects a node with at least one shadow effect.
+  const effects = node
+    .effects!.filter(
       (effect) => effect.visible !== false && effect.type.includes('SHADOW'),
     )
     .map((effect) => {

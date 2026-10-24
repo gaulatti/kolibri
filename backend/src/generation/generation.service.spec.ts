@@ -465,6 +465,45 @@ describe('GenerationService', () => {
     expect(loadFile).not.toHaveBeenCalled();
   });
 
+  it('records a safe runtime failure when the initial running-state save fails', async () => {
+    await service.queue(owner, designSystemId);
+    runSave.mockRejectedValueOnce(new Error('fixture persistence failure'));
+    await scheduledTask?.();
+    expect(loadFile).not.toHaveBeenCalled();
+    expect(run.status).toBe(GenerationRunStatus.FAILED);
+    expect(recordEvent).toHaveBeenCalledWith(
+      runId,
+      GENERATION_PHASES.DIAGNOSTIC_ERROR,
+      'GENERATION_RUNTIME_FAILED — Generation stopped unexpectedly.',
+    );
+  });
+
+  it('preserves Unicode diagnostic text while replacing controls and providing empty-field labels', async () => {
+    importDesignSystem.mockReturnValueOnce({
+      tokens: [],
+      fontSources: [],
+      imageReferences: [],
+      components: [],
+      diagnostics: [
+        { severity: 'warning', code: '\u0000', message: '\u007f' },
+        { severity: 'warning', code: 'UNICODE', message: '\u0000😀\u007f' },
+      ],
+    });
+    await service.queue(owner, designSystemId);
+    await scheduledTask?.();
+    expect(run.status).toBe(GenerationRunStatus.SUCCEEDED);
+    expect(recordEvent).toHaveBeenCalledWith(
+      runId,
+      GENERATION_PHASES.DIAGNOSTIC_WARNING,
+      'GENERATION_DIAGNOSTIC — Generation diagnostic',
+    );
+    expect(recordEvent).toHaveBeenCalledWith(
+      runId,
+      GENERATION_PHASES.DIAGNOSTIC_WARNING,
+      'UNICODE — 😀',
+    );
+  });
+
   it('includes downloaded image assets in package assembly', async () => {
     importDesignSystem.mockReturnValueOnce({
       tokens: [],

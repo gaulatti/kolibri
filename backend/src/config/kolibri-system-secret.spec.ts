@@ -1,7 +1,34 @@
-import { GetSecretValueCommand } from '@aws-sdk/client-secrets-manager';
+import {
+  GetSecretValueCommand,
+  SecretsManagerClient,
+} from '@aws-sdk/client-secrets-manager';
 import { loadKolibriSystemSecret } from './kolibri-system-secret';
 
 describe('Kolibri system secret', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('uses the configured process environment through the default SDK boundary', async () => {
+    const previousStack = process.env.KOLIBRI_STACK_NAME;
+    process.env.KOLIBRI_STACK_NAME = 'KolibriSecretFixture';
+    const send = jest
+      .spyOn(SecretsManagerClient.prototype, 'send')
+      .mockImplementation(async () => ({
+        SecretString: '{"storage":{"driver":"s3"}}',
+      }));
+    try {
+      await expect(loadKolibriSystemSecret()).resolves.toEqual({
+        storage: { driver: 's3' },
+      });
+      expect(send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          input: { SecretId: 'KolibriSecretFixture/system' },
+        }),
+      );
+    } finally {
+      if (previousStack === undefined) delete process.env.KOLIBRI_STACK_NAME;
+      else process.env.KOLIBRI_STACK_NAME = previousStack;
+    }
+  });
   it('retrieves a JSON object without interpreting unrelated configuration', async () => {
     const value = {
       postgresql: { username: 'runtime-user' },

@@ -24,3 +24,8 @@ The accepted task is to install the supported Clouseau integration without
 weakening controls or triggering production infrastructure. Proposed installation
 files do not authorize themselves. The initial blockers and verified baseline
 are recorded in `docs/clouseau-installation.md`.
+
+For this private repository, the owner permits a supported manual-merge route
+when GitHub branch protections are unavailable. Automatic merge must stay
+disabled, and the same test, exact coverage and AI review requirements apply.
+This exception does not permit a consumer-written bypass of the shared gate.

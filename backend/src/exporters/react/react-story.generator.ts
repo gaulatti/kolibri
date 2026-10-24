@@ -50,7 +50,7 @@ export class ReactStoryGenerator {
       );
     } else if (
       hasAdapter &&
-      ['dialog', 'popover', 'menu'].includes(component.behavior?.kind ?? '')
+      ['dialog', 'popover', 'menu'].includes(component.behavior!.kind)
     ) {
       story = story.replace(
         `component: ${name},`,
@@ -59,7 +59,7 @@ export class ReactStoryGenerator {
       story = story.replaceAll(`<${name} {...`, `<${name} defaultOpen {...`);
     }
     return hasAdapter
-      ? `${story}\n${this.behaviorContractStory(component.behavior?.kind ?? 'none')}\n`
+      ? `${story}\n${this.behaviorContractStory(component.behavior!.kind)}\n`
       : story;
   }
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { cp, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
@@ -34,7 +34,10 @@ test('runs as a black-box consumer with only the immutable release and proof fil
   const cleanProof = join(cleanRoot, 'proof');
   try {
     await cp(release, cleanRelease, { recursive: true });
-    await cp(proofRoot, cleanProof, { recursive: true });
+    await mkdir(cleanProof);
+    for (const name of ['src', 'assets', 'fixtures', 'expected', 'contract-pin.json', 'package.json']) {
+      await cp(join(proofRoot, name), join(cleanProof, name), { recursive: true });
+    }
     const output = execFileSync(process.execPath, [join(cleanProof, 'src/conform.mjs'), '--release', cleanRelease], {
       cwd: cleanRoot,
       encoding: 'utf8',

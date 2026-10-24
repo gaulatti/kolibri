@@ -1,6 +1,12 @@
 import { safeErrorMetadata, sanitizeLogText } from './safe-error';
 
 describe('safe error metadata', () => {
+  it('omits empty or fully sanitized messages rather than publishing empty fields', () => {
+    expect(safeErrorMetadata('')).toEqual({ errorName: 'UnknownError' });
+    expect(safeErrorMetadata({ message: '\u001b[0m' })).toEqual({
+      errorName: 'UnknownError',
+    });
+  });
   it('retains actionable structured fields and sanitizes secrets', () => {
     const token = 'npm_sensitive-token-value-123456';
     const error = Object.assign(

@@ -130,6 +130,21 @@ describe('S3GenerationStorage contract', () => {
     });
   });
 
+  it('removes only a raw snapshot when generation produced no downloadable package', async () => {
+    await storage.removeRun(runId, null);
+    expect((commandAt(0) as DeleteObjectsCommand).input.Delete).toEqual({
+      Objects: [{ Key: `kolibri/runs/${runId}/raw/figma-file.json` }],
+      Quiet: true,
+    });
+  });
+
+  it('rejects a package reference with no filename before signing access', async () => {
+    await expect(
+      storage.resolveArtifactAccess(`s3:kolibri/runs/${runId}/package`),
+    ).rejects.toMatchObject({ status: 404 });
+    expect(presign).not.toHaveBeenCalled();
+  });
+
   it('rejects references for another prefix and malformed run identifiers', async () => {
     await expect(
       storage.resolveArtifactAccess(`s3:other/runs/${runId}/package/file.zip`),

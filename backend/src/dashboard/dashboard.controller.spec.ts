@@ -33,7 +33,7 @@ describe('dashboard route', () => {
         { provide: APP_GUARD, useClass: AuthenticatedGuard },
       ],
     }).compile();
-    app = module.createNestApplication<App>();
+    app = module.createNestApplication<INestApplication<App>>();
     await app.init();
   });
 

@@ -127,18 +127,7 @@ export function RuntimeConfigurationForm({
         figmaAccessToken: token,
       });
       setFigmaCredential("");
-      setConfiguration((current) =>
-        current
-          ? {
-              ...current,
-              figmaAccessTokenConfigured: true,
-              generationConfigured: Boolean(
-                current.figmaFileKey &&
-                current.packageName,
-              ),
-            }
-          : current,
-      );
+      setConfiguration((current) => credentialConfigured(current, "figma"));
       setFigmaCredentialSaved(true);
     } catch (cause) {
       if (cause instanceof ApiError) {
@@ -168,9 +157,7 @@ export function RuntimeConfigurationForm({
         npmToken: token,
       });
       setNpmCredential("");
-      setConfiguration((current) =>
-        current ? { ...current, npmTokenConfigured: true } : current,
-      );
+      setConfiguration((current) => credentialConfigured(current, "npm"));
       setNpmCredentialSaved(true);
     } catch (cause) {
       if (cause instanceof ApiError) {
@@ -451,4 +438,17 @@ function validateSettings(input: RuntimeConfigurationInput): FieldErrors {
 
 function credentialStatus(configured: boolean) {
   return configured ? "Configured" : "Not configured";
+}
+
+export function credentialConfigured(
+  current: RuntimeConfiguration | null,
+  credential: "figma" | "npm",
+): RuntimeConfiguration | null {
+  if (!current) return null;
+  if (credential === "npm") return { ...current, npmTokenConfigured: true };
+  return {
+    ...current,
+    figmaAccessTokenConfigured: true,
+    generationConfigured: Boolean(current.figmaFileKey && current.packageName),
+  };
 }

@@ -36,7 +36,7 @@ describe('generation-history report route', () => {
         { provide: APP_GUARD, useClass: TestAuthenticatedGuard },
       ],
     }).compile();
-    app = module.createNestApplication<App>();
+    app = module.createNestApplication<INestApplication<App>>();
     app.useGlobalPipes(createGlobalValidationPipe());
     await app.init();
     httpServer = app.getHttpServer();

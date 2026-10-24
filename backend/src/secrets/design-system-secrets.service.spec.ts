@@ -38,6 +38,7 @@ function record(): DesignSystem {
     ownerId: owner.userReferenceId,
     name: 'Kolibri UI',
     description: 'Shared application components',
+    generationContract: 'legacy',
     lastPublishedVersion: null,
     createdAt: new Date('2026-08-01T12:00:00.000Z'),
     updatedAt: new Date('2026-08-01T12:00:00.000Z'),
@@ -139,6 +140,22 @@ describe('DesignSystemSecretsService', () => {
         },
       }),
     );
+  });
+
+  it('does not create empty npm configuration when only a first Figma credential is supplied', async () => {
+    await expect(
+      service.setRuntimeCredentials(owner, designSystemId, {
+        figmaAccessToken: 'fixture-figma-credential',
+      }),
+    ).resolves.toEqual({ designSystemId, configured: true });
+    const write = sentCommand(1);
+    expect(write).toBeInstanceOf(PutSecretValueCommand);
+    const configuration = JSON.parse(
+      (write as PutSecretValueCommand).input.SecretString!,
+    );
+    expect(configuration[designSystemId]).toEqual({
+      figma: { accessToken: 'fixture-figma-credential' },
+    });
   });
 
   it.each([[{ name: 'ResourceNotFoundException' }], [null]])(

@@ -5,6 +5,10 @@ Kolibri is a private, unlaunched design-system compiler. Read `README.md`,
 requirement before changing it. Keep the repository and its artifacts private.
 Deployment remains manual-only; integration work does not authorize a release,
 AWS operation, SSM command, CDK execution, or infrastructure change.
+Where GitHub cannot enforce protections for this private repository, automatic
+merge must remain disabled. The owner's accepted exception permits a supported
+manual-merge route with the same tests, exact coverage and review requirements;
+it does not authorize an unsupported bypass of Clouseau's protection checks.
 
 Preserve unrelated local work and use an isolated worktree when necessary.
 Keep local instructions and skills owned by this repository. Clouseau's shared

@@ -81,11 +81,28 @@ nginx exposes the Compose services at `https://kolibri.dev` and
 Before publishing:
 
 ```bash
+npm test
+npm run test:coverage
 npm run typecheck
 npm run build
 ```
 
 The deployable site is written to `build/client`.
+
+`npm test` runs the deterministic browser-unit suite. It exercises PKCE/state and
+callback ownership, in-memory token refresh, owner-scoped API requests, private
+artifact downloads, SSE recovery, design-system configuration and write-only
+credentials, explicit publication, and the saved operational reports.
+`npm run test:coverage` uses native V8 instrumentation over every TypeScript and
+TSX source under `app`, including unloaded files, and fails unless line and branch
+coverage are exactly 100%. Native JSON reports are written to ignored `coverage/`.
+
+The DOM suite retains real Bleecker controls. Its dashboard tests substitute the
+underlying SVG chart engine's input contract because jsdom has no browser layout;
+those tests verify report values and formatting, not visual or live-browser
+acceptance. No Cognito account, production API, provider key, or deployment is
+used by the unit suite. Hosted checks, authenticated browser acceptance, and
+deployment remain separate results.
 
 ## Component development
 

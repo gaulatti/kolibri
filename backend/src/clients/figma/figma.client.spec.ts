@@ -1,7 +1,25 @@
-import { FigmaClient } from './figma.client';
+import { FigmaClient, FigmaRequestError } from './figma.client';
 
 describe('FigmaClient', () => {
   afterEach(() => jest.restoreAllMocks());
+
+  it('preserves useful status context when an error response has no body', async () => {
+    expect(new FigmaRequestError(403).message).toBe(
+      'GET Figma file failed with HTTP 403',
+    );
+    jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce(
+        new Response('', { status: 403, statusText: 'Forbidden' }),
+      )
+      .mockResolvedValueOnce(new Response('', { status: 403 }));
+    await expect(
+      new FigmaClient().loadFile('fixture', 'fixture-token'),
+    ).rejects.toMatchObject({ statusCode: 403, stderr: 'Forbidden' });
+    await expect(
+      new FigmaClient().loadFile('fixture', 'fixture-token'),
+    ).rejects.toMatchObject({ statusCode: 403, stderr: undefined });
+  });
 
   it('requests vector geometry paths with the file snapshot', async () => {
     const request = jest

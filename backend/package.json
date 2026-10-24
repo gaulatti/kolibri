@@ -15,7 +15,9 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
+    "pretest:cov": "node -e \"require('node:fs').rmSync('.test-build', { recursive: true, force: true })\"",
+    "test:cov": "tsc --project tsconfig.test.json && jest --config jest.coverage.config.cjs --runInBand --testTimeout=30000",
+    "test:types": "tsc --project tsconfig.test.json --noEmit",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:show": "typeorm-ts-node-commonjs migration:show -d src/persistence/typeorm.datasource.ts",
@@ -88,17 +90,8 @@
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s",
-      "!**/*.module.ts",
-      "!**/*.constants.ts",
-      "!**/*.types.ts",
-      "!**/*.entity.ts",
-      "!**/dto/*.dto.ts",
-      "!**/index.ts",
-      "!main.ts",
-      "!persistence/date-column-type.ts",
-      "!persistence/persistence.entities.ts",
-      "!persistence/typeorm.datasource.ts"
+      "**/*.{ts,js}",
+      "!**/*.spec.ts"
     ],
     "coverageDirectory": "../coverage",
     "coverageThreshold": {
@@ -106,7 +99,7 @@
         "statements": 100,
         "functions": 100,
         "lines": 100,
-        "branches": 90
+        "branches": 100
       }
     },
     "testEnvironment": "node"

@@ -90,6 +90,102 @@ function visual(
 }
 
 describe('style-rule exhaustive behavior', () => {
+  it('preserves inset side strokes and scalar padding when optional dimensions are omitted', () => {
+    expect(
+      rule(
+        '.sides',
+        {
+          borderColor: '#123456',
+          borderRightWidth: 2,
+          borderBottomWidth: 3,
+        },
+        [],
+        [],
+      ),
+    ).toContain('box-shadow: inset -2px 0 0 #123456, inset 0 -3px 0 #123456;');
+    expect(
+      rule(
+        '.uniform',
+        {
+          borderIncludedInLayout: true,
+          borderColor: '#123456',
+          borderWidth: 2,
+        },
+        [],
+        [],
+      ),
+    ).toContain('border-width: 2px 2px 2px 2px;');
+    expect(
+      rule(
+        '.zero',
+        {
+          borderIncludedInLayout: true,
+          borderColor: '#123456',
+        },
+        [],
+        [],
+      ),
+    ).toContain('border-width: 0px 0px 0px 0px;');
+    expect(rule('.right-only', { paddingRight: 4 }, [], [])).toContain(
+      'padding: 0px 4px 0px 0px;',
+    );
+    expect(
+      rule(
+        '.padding',
+        {
+          paddingTop: 3,
+          paddingRight: 3,
+          paddingBottom: 3,
+          paddingLeft: 3,
+          boxShadow: '0 3px 4px #123456',
+          backgroundImageRef: 'fixture',
+        },
+        [],
+        [],
+      ),
+    ).toEqual(expect.stringContaining('padding: 3px;'));
+    const css = rule(
+      '.image',
+      { backgroundImageRef: 'fixture', boxShadow: '0 3px 4px #123456' },
+      [],
+      [],
+    );
+    expect(css).toContain('background-size: cover;');
+    expect(css).toContain('box-shadow: 0 3px 4px #123456;');
+  });
+
+  it('matches typography with omitted line-height while preserving unequal explicit line-heights', () => {
+    const typography: KolibriToken = {
+      name: 'body',
+      cssName: '--body',
+      kind: 'typography',
+      value: { fontFamily: 'Inter', fontSize: 16, fontWeight: 400 },
+      sourceNodeId: 'fixture',
+    };
+    const css = rule(
+      '.body',
+      { fontFamily: 'Inter', fontSize: 16, fontWeight: 400 },
+      [typography],
+      [],
+    );
+    expect(css).toContain('font-family: var(--body-family);');
+    expect(css).not.toContain('line-height:');
+    expect(
+      rule(
+        '.explicit',
+        { fontFamily: 'Inter', fontSize: 16, fontWeight: 400, lineHeight: 28 },
+        [typography],
+        [],
+      ),
+    ).toContain('line-height: 28px;');
+    const wrapper = visual({
+      children: [
+        visual({}),
+        visual({ type: 'TEXT', style: { color: '#123456' } }),
+      ],
+    });
+    expect(mergeVisualTextStyle(wrapper).color).toBe('#123456');
+  });
   it('renders every supported style declaration and token resolution path', () => {
     const style: NormalizedStyle = {
       background: '#ffffff',

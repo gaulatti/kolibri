@@ -173,7 +173,11 @@ describe("private artifact download", () => {
     transport.mockResolvedValueOnce(new Response("zip bytes", { headers: header ? { "Content-Disposition": header } : {} }));
     await generationsApi.downloadArtifact("run");
     expect(click).toHaveBeenCalledOnce();
-    expect(URL.createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    expect(URL.createObjectURL).toHaveBeenCalledOnce();
+    const downloaded = vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob;
+    expect(downloaded.size).toBe(9);
+    expect(downloaded.type).toBe("text/plain;charset=utf-8");
+    expect(await downloaded.text()).toBe("zip bytes");
     vi.advanceTimersByTime(1000);
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:fixture");
   });

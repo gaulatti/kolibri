@@ -123,6 +123,15 @@ deployment or infrastructure credentials. This approval does not change public
 repository runner policy, Kolibri's privacy, or its manual-merge requirement.
 No billing change, host mutation or new runner infrastructure was performed.
 
+The first Helix [run 40136216800](https://github.com/gaulatti/kolibri/actions/runs/40136216800)
+passed all backend checks and 392 tests. Three frontend tests exposed a test
+portability error: Node's response Blob and jsdom's global Blob belong to
+different realms. The tests now verify the actual download bytes, size and MIME
+type. All 241 frontend tests pass locally with unchanged exact coverage. That
+run also failed artifact publication because the account's artifact storage
+quota was exhausted. Upload remains required; this failure must be resolved
+before claiming complete hosted verification or review-record handoff.
+
 The original negative baseline below is retained as historical evidence. It is
 not the current frontend result.
 

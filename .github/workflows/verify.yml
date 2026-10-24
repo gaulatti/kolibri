@@ -64,18 +64,24 @@ jobs:
         run: npm --prefix conformance/bleecker-toggle run test:coverage
       - name: Verify black-box conformance
         run: npm --prefix conformance/bleecker-toggle run conform
-      - name: Preserve native verification evidence
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Load released shared coverage engine
+        uses: actions/checkout@v4
         with:
-          name: kolibri-native-coverage-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_attempt }}
-          if-no-files-found: error
-          path: |
-            backend/coverage/coverage-final.json
-            backend/coverage/coverage-summary.json
-            frontend/coverage/coverage-final.json
-            frontend/coverage/coverage-summary.json
-            contract/coverage/coverage-final.json
-            contract/coverage/coverage-summary.json
-            conformance/bleecker-toggle/coverage/coverage-final.json
-            conformance/bleecker-toggle/coverage/coverage-summary.json
+          repository: gaulatti/clouseau
+          ref: c4e07381a288fc74200fd712f04ac3265ef2184a
+          path: .clouseau-engine
+          persist-credentials: false
+      - name: Enforce 100% line and branch coverage
+        shell: bash
+        run: |
+          set -euo pipefail
+          report="$RUNNER_TEMP/kolibri-native-coverage.json"
+          python3 .clouseau-engine/src/coverage_plan.py .clouseau-local.json "$GITHUB_WORKSPACE" | tee "$report"
+          {
+            printf '### Complete application native coverage\n\n'
+            printf 'Candidate: `%s`\n\n' "$(git rev-parse HEAD)"
+            printf 'Shared Clouseau: `c4e07381a288fc74200fd712f04ac3265ef2184a`\n\n'
+            printf '```json\n'
+            cat "$report"
+            printf '\n```\n'
+          } >> "$GITHUB_STEP_SUMMARY"

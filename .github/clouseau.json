@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "base_branch": "main",
+  "workflow": "verify.yml",
+  "verification": {
+    "job": "verify",
+    "steps": [
+      "Confirm exact candidate",
+      "Check backend and test types",
+      "Build backend",
+      "Test backend with exact native coverage",
+      "Check frontend types",
+      "Test frontend with exact native coverage",
+      "Build frontend",
+      "Test contract with exact native coverage",
+      "Validate immutable contract release",
+      "Verify contract build determinism",
+      "Test conformance with exact native coverage",
+      "Verify black-box conformance",
+      "Enforce 100% line and branch coverage"
+    ]
+  },
+  "manual_reviewer": "gaulatti",
+  "merge_mode": "manual",
+  "repository_policy": ".github/clouseau.md",
+  "readme": "README.md",
+  "sensitive_paths": [
+    ".github/CODEOWNERS",
+    ".clouseau-local.json",
+    "AGENTS.md",
+    "CLAUDE.md"
+  ],
+  "deployment": null,
+  "acceptance": {
+    "examiner": "deepseek-flash",
+    "challenger": "deepseek-v4-pro",
+    "grader": "routed",
+    "grading_model": "deepseek-flash",
+    "repair_attempts": 2
+  }
+}

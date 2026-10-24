@@ -107,8 +107,10 @@ accepted-base policy until the supported initial bootstrap accepts it.
 
 The thin `.github/workflows/verify.yml` configures these commands on the existing
 Helix private pool with Node 22, checks out the exact event candidate, uses a
-read-only token without persisted checkout credentials, and retains native
-reports. It has no provider key, approval/merge permission or deployment step.
+read-only token without persisted checkout credentials, and checks all four
+native reports through the released shared coverage plan. Its exact JSON result
+is retained in the Actions log and job summary. It has no provider key,
+approval/merge permission or deployment step.
 Push checks establish candidate verification only; the eventual PR-event check,
 trusted review, signed evidence and manual merge still need their own proof.
 
@@ -129,8 +131,21 @@ portability error: Node's response Blob and jsdom's global Blob belong to
 different realms. The tests now verify the actual download bytes, size and MIME
 type. All 241 frontend tests pass locally with unchanged exact coverage. That
 run also failed artifact publication because the account's artifact storage
-quota was exhausted. Upload remains required; this failure must be resolved
-before claiming complete hosted verification or review-record handoff.
+quota was exhausted. After the Blob correction,
+[run 40136641131](https://github.com/gaulatti/kolibri/actions/runs/40136641131)
+passed all 740 tests, builds, type checks and conformance checks; diagnostic
+artifact publication was its sole failed step. Both failed runs remain evidence.
+The new verification workflow replaces that diagnostic upload with a mandatory
+released shared coverage-plan check plus its full result in the job summary.
+No test or coverage gate was removed. Trusted acceptance-record transport is a
+separate pending central integration dependency, not an optional diagnostic.
+
+`.github/clouseau.json` records the released version 2 manual-merge policy,
+qualified routed review roles and every required native verification step.
+Deployment is deliberately absent from the shared controller: Kolibri's existing
+deployment workflows remain manual-only. Public signing enrollment and separated
+trusted assessment/write jobs still require the released bootstrap and record
+transport. This proposed configuration is not accepted policy or an approval.
 
 The original negative baseline below is retained as historical evidence. It is
 not the current frontend result.

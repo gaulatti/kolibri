@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "base_branch": "main",
+  "readme": "README.md",
+  "repository_policy": ".github/clouseau.md",
+  "verification": [
+    ["npm", "--prefix", "backend", "ci"],
+    ["npm", "--prefix", "frontend", "ci"],
+    ["npm", "--prefix", "contract", "ci"],
+    ["npm", "--prefix", "backend", "run", "test:types"],
+    ["npm", "--prefix", "backend", "run", "build"],
+    ["npm", "--prefix", "backend", "run", "test:cov"],
+    ["npm", "--prefix", "frontend", "run", "typecheck"],
+    ["npm", "--prefix", "frontend", "run", "test:coverage"],
+    ["npm", "--prefix", "frontend", "run", "build"],
+    ["npm", "--prefix", "contract", "run", "test:coverage"],
+    ["npm", "--prefix", "contract", "run", "validate"],
+    ["npm", "--prefix", "contract", "run", "verify:determinism"],
+    ["npm", "--prefix", "conformance/bleecker-toggle", "run", "test:coverage"],
+    ["npm", "--prefix", "conformance/bleecker-toggle", "run", "conform"]
+  ],
+  "coverage": [
+    {
+      "format": "istanbul",
+      "report": "backend/coverage/coverage-final.json",
+      "source_directory": "backend/src"
+    },
+    {
+      "format": "istanbul",
+      "report": "frontend/coverage/coverage-final.json",
+      "source_directory": "frontend/app"
+    },
+    {
+      "format": "istanbul",
+      "report": "contract/coverage/coverage-final.json",
+      "source_directory": "contract"
+    },
+    {
+      "format": "istanbul",
+      "report": "conformance/bleecker-toggle/coverage/coverage-final.json",
+      "source_directory": "conformance/bleecker-toggle/src"
+    }
+  ]
+}

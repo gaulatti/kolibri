@@ -113,6 +113,14 @@ function coverage are exactly 100%. Tests retain the real Nest module graph,
 HTTP authorization boundaries and SQLite persistence checks; external provider
 failure paths use deterministic dependency-boundary fixtures.
 
+Modules containing only type aliases and explicit type imports use `.d.ts`
+declaration filenames. Runtime constants and other executable modules keep
+`.ts` filenames and remain instrumented. TypeScript checks the declarations;
+Nest's supported asset copy retains them in `dist/` for dependent generated
+declarations. This naming does not remove executable code or alter coverage
+counters. The declaration migration was checked against the TypeScript AST and
+preserved every remaining emitted runtime module body.
+
 Direct development startup still requires PostgreSQL. By default local mode
 targets the Compose hostname `postgres`; set `DATABASE_HOST`, `DATABASE_PORT`,
 `DATABASE_NAME`, `DATABASE_USER`, and `DATABASE_PASSWORD` to use a PostgreSQL

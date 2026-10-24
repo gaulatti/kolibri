@@ -87,19 +87,38 @@ The backend now compiles source and tests through the production TypeScript
 compiler before native Istanbul measurement. This avoids testing decorator
 metadata branches introduced only by ts-jest's isolated per-file compilation.
 Its inventory retains every production source; test fixtures are type-checked
-instead of suppressing diagnostics. All 119 emitted production module bodies
-match the coverage compilation, differing only in source-map comments. The
-immutable neutral-contract release remains byte-identical. Native coverage and
-the shared engine's inventory acceptance remain separate checks: the current
-shared checker still demands counters for backend specs and type-only `.ts`
-modules that contain no application execution. No counters were fabricated.
+instead of suppressing diagnostics. The original 119 emitted module bodies
+matched the coverage compilation, differing only in source-map comments. A
+subsequent TypeScript-AST audit proved that exactly seven source modules contain
+only type aliases and explicit type imports. They now use canonical `.d.ts`
+filenames; no runtime `.types.ts` file was renamed. All 112 remaining runtime
+module bodies are byte-identical, and Nest copies the seven declaration assets
+into `dist/`. Native counters are unchanged. The immutable neutral-contract
+release also remains byte-identical.
 
-The thin `.github/workflows/verify.yml` runs these real commands on disposable
+Released Clouseau
+[`c4e07381a288fc74200fd712f04ac3265ef2184a`](https://github.com/gaulatti/clouseau/commit/c4e07381a288fc74200fd712f04ac3265ef2184a)
+supports multiple native reports through version 2 local recipes and fixed
+test/declaration inventory conventions. `.clouseau-local.json` now records the
+four nonoverlapping product roots and their real argument-array commands. Its
+installation commands and verification run independently of GitHub Actions and
+contain no provider or signing credentials. This proposed recipe is not trusted
+accepted-base policy until the supported initial bootstrap accepts it.
+
+The thin `.github/workflows/verify.yml` configures these commands on disposable
 GitHub-hosted Node 22 runners, checks out the exact event candidate, uses a
 read-only token without persisted checkout credentials, and retains native
 reports. It has no provider key, approval/merge permission or deployment step.
 Push checks establish candidate verification only; the eventual PR-event check,
 trusted review, signed evidence and manual merge still need their own proof.
+
+The first hosted push
+[run 40134744162](https://github.com/gaulatti/kolibri/actions/runs/40134744162)
+failed before executing any steps because “an Actions budget is preventing
+further use.” It is not a failed application test or CI acceptance evidence.
+The existing Helix private pool is being audited separately; labels alone do
+not establish isolation. No billing change, runner infrastructure operation or
+unsafe fallback was performed.
 
 The original negative baseline below is retained as historical evidence. It is
 not the current frontend result.
@@ -194,13 +213,12 @@ migration) is needed before this native layout can meet the supported protocol.
    not grant Kolibri an exception from its explicit no-automatic-merge policy.
 4. Release the shared run-wide automatic engine upgrade mechanism. A fixed-pin
    installation must not be described as self-updating.
-5. Support this monorepo's complete native source inventory and retain exact
-   coverage for every product module. Frontend native coverage and the shared
-   parser now pass; the initial frontend testing gap is closed. Backend native
-   instrumentation and source-inventory acceptance are distinct checks. The
-   shared directory inventory still requires counters for colocated tests and
-   type-only `.ts` modules. Do not create counters for non-executable code, omit
-   executable production paths, or lower thresholds.
+5. Retain complete native coverage for every product module through the released
+   multi-root recipe. The initial coverage and frontend-testing gaps are closed;
+   specs follow the shared fixed test conventions and AST-proved declarations
+   use `.d.ts` names. Do not fabricate counters for non-executable code, omit
+   executable production paths, or lower thresholds. Establish a qualified
+   runner route before claiming the native gates actually passed in GitHub.
 6. After these dependencies, install the independently permissioned CI jobs,
    enroll public signer metadata, configure only the chosen provider's required
    secret, establish real required check sources, and demonstrate eligible

@@ -105,8 +105,8 @@ installation commands and verification run independently of GitHub Actions and
 contain no provider or signing credentials. This proposed recipe is not trusted
 accepted-base policy until the supported initial bootstrap accepts it.
 
-The thin `.github/workflows/verify.yml` configures these commands on disposable
-GitHub-hosted Node 22 runners, checks out the exact event candidate, uses a
+The thin `.github/workflows/verify.yml` configures these commands on the existing
+Helix private pool with Node 22, checks out the exact event candidate, uses a
 read-only token without persisted checkout credentials, and retains native
 reports. It has no provider key, approval/merge permission or deployment step.
 Push checks establish candidate verification only; the eventual PR-event check,
@@ -116,9 +116,12 @@ The first hosted push
 [run 40134744162](https://github.com/gaulatti/kolibri/actions/runs/40134744162)
 failed before executing any steps because “an Actions budget is preventing
 further use.” It is not a failed application test or CI acceptance evidence.
-The existing Helix private pool is being audited separately; labels alone do
-not establish isolation. No billing change, runner infrastructure operation or
-unsafe fallback was performed.
+The owner explicitly accepted the existing persistent Helix private-pool tradeoff
+for these private repositories. This pool is not a disposable runner boundary.
+The verification job retains read-only permissions and no provider, approval,
+deployment or infrastructure credentials. This approval does not change public
+repository runner policy, Kolibri's privacy, or its manual-merge requirement.
+No billing change, host mutation or new runner infrastructure was performed.
 
 The original negative baseline below is retained as historical evidence. It is
 not the current frontend result.

@@ -11,6 +11,9 @@ Component READMEs remain the runbooks for working inside each package.
 
 ## Documentation map
 
+Clouseau installation preparation and its verified blockers are recorded in
+[Clouseau installation readiness](clouseau-installation.md).
+
 | Document                                              | Audience                                  | Contents                                                                                                                                               |
 | ----------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [Architecture and data](architecture.md)              | Developers, reviewers, operators          | Components, trust boundaries, runtime modes, relational model, secrets, storage, and ownership rules.                                                  |

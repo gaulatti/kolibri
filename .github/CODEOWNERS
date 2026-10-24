@@ -1,0 +1,4 @@
+# Initial ownership follows the repository owner and sole recorded contributor.
+# This definition requires protected-base acceptance before automation may use it.
+* @gaulatti
+/.github/CODEOWNERS @gaulatti

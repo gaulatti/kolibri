@@ -6,14 +6,30 @@ Status: local verification implemented; hosted integration not accepted. Audited
 
 ## Supported shared implementation
 
-The final thin integration targets released public Clouseau
-[`4b713578475c41e097d8e325f206cdb07e88a403`](https://github.com/gaulatti/clouseau/commit/4b713578475c41e097d8e325f206cdb07e88a403),
+The current released shared local protocol is Clouseau
+[`1df7a5fe244ac837023caa0e14a22412d123f12c`](https://github.com/gaulatti/clouseau/commit/1df7a5fe244ac837023caa0e14a22412d123f12c),
 engine digest
-`01e452d5d6cc583cf0ac6515c440999b0188c7d7b01e82f66ebc0c4c27dbd890`.
+`5f5afe9aa60dfb41418625e06c7a8405c143c4f964845079ee1c81b97658030f`.
+The last actual hosted qualification used released
+`4b713578475c41e097d8e325f206cdb07e88a403`; this documentation update does not
+claim a new hosted review or approval.
 It includes initial trust installation, public identity export, multi-root native
 coverage, code-owner enforcement, review completeness/convergence, bounded
 job-output acceptance-record transport and run-wide frozen engine selection.
 Codex and Claude Code are the supported authenticated local harnesses.
+
+Local AI review now runs before PR creation regardless of partial coverage,
+a failing verification/coverage command, or missing, invalid or unavailable
+coverage. The runner records real outcomes and artifact freshness honestly;
+it does not substitute fabricated passing counts or old reports. AI quality,
+local technical verification and coverage are separate results. A passing AI
+quality verdict may produce signed review-reuse evidence even when local
+coverage is incomplete. That evidence grants no technical approval or merge
+authority. CI still independently requires the full mandatory test suite and
+exact 100% line and branch coverage before automatic approval or merge. Safe
+complete source, accepted purpose and material behavioral evidence remain
+necessary; demonstrated defects, deceptive tests or missing context still block
+AI quality. No local AI review has been executed for this candidate.
 
 The stable resolver is pinned at
 `f5b6f04a5b95090fc0b5dc0e6fec85cc426273f0`; it validates protected public
@@ -42,10 +58,11 @@ receipts avoid CI AI calls; absent receipts use the qualified routed CI reviewer
 invalid receipts fail without an unexpected paid fallback. Those hosted paths
 remain unproved until installation is accepted and exercised.
 
-The supported [initial trust procedure](https://github.com/gaulatti/clouseau/blob/4b713578475c41e097d8e325f206cdb07e88a403/docs/initial-installation.md)
+The supported [initial trust procedure](https://github.com/gaulatti/clouseau/blob/1df7a5fe244ac837023caa0e14a22412d123f12c/docs/initial-installation.md)
 freezes the candidate, records an explicit native administrator commit grant,
-performs authenticated independent local review, then publishes installation-only
-signed evidence before a ready PR. Its separate read-only checker requires real
+performs authenticated independent local AI quality review with honest separate
+verification status, then publishes eligible installation-only signed evidence
+before a ready PR. Its separate read-only checker requires real
 successful PR-event verification and returns manual owner acceptance, never
 ordinary approval or automatic merge. No grant, review, receipt or PR has been
 created for this candidate. The separate initial checker now freezes protected
@@ -67,7 +84,11 @@ additional requested source and review reports: they are not an eligible review
 snapshot or signed evidence. New thin wiring does not make that lower bound fit.
 Do not omit source, manufacture trust, obtain a grant or spend model calls while
 this shared limit prevents complete review. A central supported capacity repair
-is required, followed by a fresh full-candidate measurement.
+is required, followed by a fresh full-candidate measurement. The released
+completeness audit and 3,000,000-byte receipt limit do not remove the remaining
+300,000-byte per-file and 900,000-character snapshot limits; supported source
+paging remains unavailable. This source-capacity blocker is independent of the
+released coverage-independent local AI behavior.
 
 The owner requires continued privacy and explicitly accepts the existing
 persistent Helix private pool. The clarified target source-merge policy is:
@@ -306,6 +327,8 @@ migration) is needed before this native layout can meet the supported protocol.
    available protections or simulate unavailable protection in consumer code.
 2. Resolve the measured complete-evidence capacity limits centrally, then measure
    the full final candidate again without omitting source or review evidence.
+   Do not confuse that source blocker with local coverage: the released local
+   AI protocol reviews despite partial, failed or unavailable coverage.
 3. Use the released initial trust procedure, signed installation evidence and
    independent initial checker before initial owner acceptance. Proposed recipe,
    public enrollment and workflows are prepared; they are not accepted trust.

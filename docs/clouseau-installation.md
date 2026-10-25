@@ -7,9 +7,9 @@ Status: local verification implemented; hosted integration not accepted. Audited
 ## Supported shared implementation
 
 The final thin integration targets released public Clouseau
-[`29eab7152004a42b14c029cd7f1eadb4d7c647c1`](https://github.com/gaulatti/clouseau/commit/29eab7152004a42b14c029cd7f1eadb4d7c647c1),
+[`4b713578475c41e097d8e325f206cdb07e88a403`](https://github.com/gaulatti/clouseau/commit/4b713578475c41e097d8e325f206cdb07e88a403),
 engine digest
-`4e0425c6f49efb070783e9984f1fbf8327d548b9c67b930881d964b4ba442d4d`.
+`01e452d5d6cc583cf0ac6515c440999b0188c7d7b01e82f66ebc0c4c27dbd890`.
 It includes initial trust installation, public identity export, multi-root native
 coverage, code-owner enforcement, review completeness/convergence, bounded
 job-output acceptance-record transport and run-wide frozen engine selection.
@@ -24,16 +24,25 @@ checked before acceptance. Summary provenance avoids an optional diagnostic
 artifact upload without changing resolution or verification. This wiring is
 proposed and has not established ordinary PR acceptance or upgrade proof yet.
 
-`.github/clouseau.json` selects released manual merge mode and optional local
-receipt reuse. Its `central_source` authorizes only public Clouseau main. The
-public enrollment was exported through the released `public-identity` command
-for native actor `gaulatti`; no private signing material was read or copied.
+`.github/clouseau.json` explicitly selects the released `merge_mode: "automatic"`
+owner-only policy and optional local receipt reuse. The shared gate requires
+accepted-base CODEOWNERS to cover every affected path. On GitHub's exact
+unavailable private-plan condition, native repository auto-merge remains false
+and the shared controller may atomically advance the exact base to the reviewed
+head only after complete acceptance revalidation. The shared source/base
+compare-and-swap admits no force or fallback merge. No consumer merge controller
+or extra finalize/deployment-dispatch operation was added.
+
+The proposed policy's `central_source` authorizes only protected public Clouseau
+main. Public enrollment was exported through the released `public-identity`
+command for native actor `gaulatti`; no private signing material was read or
+copied.
 The entry remains **proposed enrollment**, not accepted trust. Matching eligible
 receipts avoid CI AI calls; absent receipts use the qualified routed CI reviewer;
 invalid receipts fail without an unexpected paid fallback. Those hosted paths
 remain unproved until installation is accepted and exercised.
 
-The supported [initial trust procedure](https://github.com/gaulatti/clouseau/blob/29eab7152004a42b14c029cd7f1eadb4d7c647c1/docs/initial-installation.md)
+The supported [initial trust procedure](https://github.com/gaulatti/clouseau/blob/4b713578475c41e097d8e325f206cdb07e88a403/docs/initial-installation.md)
 freezes the candidate, records an explicit native administrator commit grant,
 performs authenticated independent local review, then publishes installation-only
 signed evidence before a ready PR. Its separate read-only checker requires real
@@ -61,11 +70,24 @@ this shared limit prevents complete review. A central supported capacity repair
 is required, followed by a fresh full-candidate measurement.
 
 The owner requires continued privacy and explicitly accepts the existing
-persistent Helix private pool. Where GitHub's private plan cannot enforce branch
-protection, the released manual mode preserves tests, exact coverage, review and
-current-head ownership requirements. Repository auto-merge remains disabled.
-The controller never merges or deploys in this mode. Deployment and infrastructure
-authorization remain separate; no AWS, SSM or CDK operation was performed.
+persistent Helix private pool. The clarified target source-merge policy is:
+
+- An internal PR may merge automatically only when its author owns every affected
+  path under immutable accepted-base CODEOWNERS, including both sides of renames,
+  the full test suite passes, exact 100% line and branch coverage passes, and
+  Clouseau approves the current head and base.
+- External or non-owner PRs require current-head human code-owner approval and
+  manual merge. Stale, dismissed and bot reviews cannot satisfy that requirement.
+- Missing ownership, invalid ownership data or unverifiable membership denies
+  automatic merge. Proposed ownership changes cannot authorize their own author.
+
+Current live automatic delivery remains unactivated because the proposed trust
+and gates have not been accepted or exercised. The repository native
+`allow_auto_merge` setting remains false, as required by the released shared
+private-plan path. The proposed configuration uses explicit owner-only automatic
+mode; it is not accepted-base authority. No consumer controller, protection
+bypass or waiver is permitted. Source merge does not authorize production release:
+deployment remains manual-only. No AWS, SSM or CDK operation was performed.
 
 ## Resumed verification
 
@@ -130,14 +152,16 @@ installation commands and verification run independently of GitHub Actions and
 contain no provider or signing credentials. This proposed recipe is not trusted
 accepted-base policy until the supported initial bootstrap accepts it.
 
-The thin `.github/workflows/verify.yml` configures these commands on the existing
-Helix private pool with Node 22, checks out the exact event candidate, uses a
-read-only token without persisted checkout credentials, and checks all four
-native reports through the released shared coverage plan. Its exact JSON result
-is retained in the Actions log and job summary. It has no provider key,
-approval/merge permission or deployment step.
+The technical verification job in `.github/workflows/verify.yml` runs these
+commands on the existing Helix private pool with Node 22, checks out the exact
+event candidate, uses a read-only token without persisted checkout credentials,
+and checks all four native reports through the released shared coverage plan.
+Its exact JSON result is retained in the Actions log and job summary. This job
+has no provider key, approval/merge permission or deployment step. Provider
+assessment and write-capable approval are separate trusted PR-target jobs.
 Push checks establish candidate verification only; the eventual PR-event check,
-trusted review, signed evidence and manual merge still need their own proof.
+trusted review, signed evidence and owner/non-owner merge paths need separate
+proof.
 
 Ordinary coverage validation reads `.clouseau-local.json` from the immutable
 accepted PR base. Feature pushes use the freshly fetched `origin/main`. Proposed
@@ -158,7 +182,7 @@ The owner explicitly accepted the existing persistent Helix private-pool tradeof
 for these private repositories. This pool is not a disposable runner boundary.
 The verification job retains read-only permissions and no provider, approval,
 deployment or infrastructure credentials. This approval does not change public
-repository runner policy, Kolibri's privacy, or its manual-merge requirement.
+repository runner policy, Kolibri's privacy, or the source-ownership requirements.
 No billing change, host mutation or new runner infrastructure was performed.
 
 The first Helix [run 40136216800](https://github.com/gaulatti/kolibri/actions/runs/40136216800)
@@ -176,8 +200,15 @@ released shared coverage-plan check plus its full result in the job summary.
 No test or coverage gate was removed. Trusted acceptance-record transport is a
 separate pending central integration dependency, not an optional diagnostic.
 
-`.github/clouseau.json` records the released version 2 manual-merge policy,
+`.github/clouseau.json` records the released version 2 owner-only automatic mode,
 qualified routed review roles and every required native verification step.
+Activation remains unproved until trust acceptance and actual hosted owner and
+non-owner proof. Consumer-owned merge logic remains prohibited. Focused wiring
+tests evaluate real Actions event expressions, the actual immutable-base recipe
+selector, mandatory complete verification, frozen-engine handoff, credential
+separation and absence of deployment/finalization calls. A separate data-only
+check loads the shared configuration validator and validates consumer inputs
+against the actual released action before technical acceptance.
 Deployment is deliberately absent from the shared controller: Kolibri's existing
 deployment workflows remain manual-only. Public signing enrollment and separated
 trusted assessment/write jobs are now prepared using released interfaces.
@@ -269,28 +300,25 @@ migration) is needed before this native layout can meet the supported protocol.
 
 ## Outstanding dependencies and delivery boundary
 
-1. Keep Kolibri private and automatic merge disabled. Use a released shared
-   manual-merge route that preserves tests, exact coverage and AI review when
-   GitHub cannot enforce protection. Do not simulate protection or bypass the
-   current controller's protection validation in consumer code.
-2. Release a generic initial consumer trust-enrollment procedure that can accept
-   the first local recipe, policy, engine digest and public signer without
-   trusting contributor-proposed controls or bypassing checks.
-3. Use protocol v2's now-released code-owner merge enforcement where protection
-   supports automatic merge. This capability is present in `7d350031`; it does
-   not grant Kolibri an exception from its explicit no-automatic-merge policy.
-4. Release the shared run-wide automatic engine upgrade mechanism. A fixed-pin
-   installation must not be described as self-updating.
-5. Retain complete native coverage for every product module through the released
-   multi-root recipe. The initial coverage and frontend-testing gaps are closed;
-   specs follow the shared fixed test conventions and AST-proved declarations
-   use `.d.ts` names. Do not fabricate counters for non-executable code, omit
-   executable production paths, or lower thresholds. Establish a qualified
-   runner route before claiming the native gates actually passed in GitHub.
-6. After these dependencies, install the independently permissioned CI jobs,
-   enroll public signer metadata, configure only the chosen provider's required
-   secret, establish real required check sources, and demonstrate eligible
-   receipt reuse plus ordinary unstamped CI review on protected PRs.
+1. Keep Kolibri private. Preserve the current disabled automatic-delivery state
+   until the released shared owner-only path has accepted, verified gates for
+   the clarified owner-only automatic/non-owner manual policy. Do not bypass
+   available protections or simulate unavailable protection in consumer code.
+2. Resolve the measured complete-evidence capacity limits centrally, then measure
+   the full final candidate again without omitting source or review evidence.
+3. Use the released initial trust procedure, signed installation evidence and
+   independent initial checker before initial owner acceptance. Proposed recipe,
+   public enrollment and workflows are prepared; they are not accepted trust.
+4. Preserve the prepared run-wide engine resolver and verify its actual selected
+   SHA/digest and source at every engine job. Upgrade selection is separate from
+   receipt compatibility; an engine mismatch must reject stale evidence.
+5. Retain all application tests and complete native exact coverage. Hosted initial
+   qualification has passed all 740 tests, 4226/4226 lines and 3092/3092 branches;
+   this is not approval or merge evidence. Existing failures remain recorded.
+6. After trust acceptance, prove ordinary receipt reuse with zero CI AI calls,
+   unstamped qualified CI review, owner-only automatic merge and non-owner
+   current-head human approval/manual merge. Keep deployment authorization
+   separate. No ready PR is allowed while complete review remains blocked.
 
 Documentation automation is unavailable for this private, unlaunched product:
 there is no wiki and no verified successful deployed-source run for a supported

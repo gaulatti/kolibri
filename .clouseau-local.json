@@ -4,6 +4,8 @@
   "readme": "README.md",
   "repository_policy": ".github/clouseau.md",
   "verification": [
+    ["npm", "--prefix", ".github/tests", "ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+    ["npm", "--prefix", ".github/tests", "test"],
     ["npm", "--prefix", "backend", "ci"],
     ["npm", "--prefix", "frontend", "ci"],
     ["npm", "--prefix", "contract", "ci"],

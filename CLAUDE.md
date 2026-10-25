@@ -5,10 +5,19 @@ Kolibri is a private, unlaunched design-system compiler. Read `README.md`,
 requirement before changing it. Keep the repository and its artifacts private.
 Deployment remains manual-only; integration work does not authorize a release,
 AWS operation, SSM command, CDK execution, or infrastructure change.
-Where GitHub cannot enforce protections for this private repository, automatic
-merge must remain disabled. The owner's accepted exception permits a supported
-manual-merge route with the same tests, exact coverage and review requirements;
-it does not authorize an unsupported bypass of Clouseau's protection checks.
+The accepted merge policy permits automatic merge for an internal PR only when
+its author owns every affected path under the immutable accepted-base CODEOWNERS
+(including both sides of renames), the full test suite passes, exact 100% line
+and branch coverage passes, and Clouseau approves the current head and base.
+External or non-owner PRs require current-head human code-owner approval and
+manual merge. Missing or unverifiable ownership denies automatic merge.
+
+The released shared owner-only path is prepared but remains unactivated until
+initial trust is accepted and its actual gates are verified. On the supported
+unavailable private-plan path, native repository auto-merge stays disabled; the
+shared acceptance gate alone may merge an eligible owner revision after all
+checks. Proposed configuration does not authorize itself. Do not build a consumer
+merge controller, bypass protections or waive tests, exact coverage or review.
 
 Preserve unrelated local work and use an isolated worktree when necessary.
 Keep local instructions and skills owned by this repository. Clouseau's shared

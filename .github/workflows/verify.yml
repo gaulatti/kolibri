@@ -75,6 +75,11 @@ jobs:
             backend/package-lock.json
             frontend/package-lock.json
             contract/package-lock.json
+            .github/tests/package-lock.json
+      - name: Install Clouseau wiring test dependencies
+        run: npm --prefix .github/tests ci --ignore-scripts --no-audit --no-fund
+      - name: Test Clouseau integration wiring
+        run: npm --prefix .github/tests test
       - name: Install backend dependencies
         run: npm --prefix backend ci
       - name: Install frontend dependencies
@@ -114,6 +119,8 @@ jobs:
         uses: ./.clouseau-ci
         with:
           operation: verify-engine
+      - name: Validate released Clouseau interfaces
+        run: npm --prefix .github/tests run verify:shared -- .clouseau-ci
       - name: Select accepted coverage recipe as data
         shell: bash
         env:

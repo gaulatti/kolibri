@@ -457,3 +457,27 @@ This is a partial success. Download remains available.
   login, frontend bucket list, or distribution invalidation), not
   CloudFormation stack inspection.
 - Ensure `AWS_REGION` matches the deployed stack.
+
+## Pull request verification and Clouseau review
+
+Every PR runs `.github/workflows/ci.yml` on the Helix self-hosted runners: the
+backend build, frontend type-check, infrastructure tests, neutral contract
+validation and tests, backend tests with source coverage, and Clouseau's exact
+100% line and branch coverage gate over `backend/src`. Run the same commands
+locally:
+
+```sh
+npm ci --prefix backend && npm run build --prefix backend
+npm run test:coverage --prefix backend   # writes backend/coverage/coverage-final.json
+```
+
+`test:coverage` measures every backend `.ts` source (no `collectCoverageFrom`
+exclusions, no threshold) so the Clouseau gate sees the real inventory. The
+repository is below 100% today (recorded baseline: 95.25% lines, 90.73%
+branches by Jest, and seven type-only files that Istanbul reports no entry for),
+so the coverage step is red and a PR stays pending for a human merge until
+coverage reaches 100%. Reviewed PRs carrying a signed local Clouseau receipt
+use the CI verifier without provider keys; see `AGENTS.md` and
+`.github/clouseau.md` for the purpose contract and the central-source upgrade
+model. The CI needs the `DEEPSEEK_API_KEY`, `TYPESAFE_API_KEY` and
+`DEPLOYMENT_TOKEN` repository secrets.

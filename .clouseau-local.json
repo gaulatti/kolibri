@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "base_branch": "main",
+  "readme": "README.md",
+  "repository_policy": ".github/clouseau.md",
+  "verification": [
+    ["npm", "run", "build", "--prefix", "backend"],
+    ["npm", "run", "typecheck", "--prefix", "frontend"],
+    ["npm", "test", "--prefix", "infrastructure"],
+    ["npm", "test", "--prefix", "contract"],
+    ["npm", "run", "test:coverage", "--prefix", "backend"]
+  ],
+  "coverage": {
+    "format": "istanbul",
+    "report": "backend/coverage/coverage-final.json",
+    "source_directory": "backend/src"
+  }
+}

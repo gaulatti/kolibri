@@ -7,7 +7,13 @@ import {evaluate, allowed} from './workflow-expressions.mjs';
 const workflow = parse(readFileSync(new URL('../workflows/ci.yml', import.meta.url), 'utf8'));
 
 test('actual consumer job expressions freeze one authorized SHA and digest across a central advance and use newer main next run', () => {
-  assertFrozenWorkflow(workflow, evaluate);
+  // The shared contract forbids resolver inputs that choose a source. This repository passes only
+  // provenance retention (summary, no Actions artifact), which the account's full artifact quota requires.
+  const frozen = structuredClone(workflow);
+  const resolver = frozen.jobs['resolve-clouseau'].steps[0];
+  assert.deepEqual(resolver.with, {provenance: 'summary'});
+  delete resolver.with;
+  assertFrozenWorkflow(frozen, evaluate);
   const trust = JSON.parse(readFileSync(new URL('../clouseau.json', import.meta.url))).local_review;
   assert.deepEqual(trust.central_source, {repository: 'gaulatti/clouseau', ref: 'refs/heads/main'});
   assert.equal(trust.reviewer_digest, undefined);

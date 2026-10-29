@@ -481,3 +481,13 @@ use the CI verifier without provider keys; see `AGENTS.md` and
 `.github/clouseau.md` for the purpose contract and the central-source upgrade
 model. The CI needs the `DEEPSEEK_API_KEY`, `TYPESAFE_API_KEY` and
 `DEPLOYMENT_TOKEN` repository secrets.
+
+Artifact storage and engine bootstrap: the account's Actions artifact quota is
+exhausted, so no step uploads or downloads an Actions artifact. `resolve-clouseau`
+runs `gaulatti/clouseau/scripts/resolve` with `provenance: summary` (the frozen
+SHA and digest stay in the run summary), and the review record moves from
+assessment to gate and repair as the bounded `review-record` job output
+(`record-transport: job-output`). The resolver is pinned to Clouseau `f5b6f04`;
+later Clouseau main (`c709020`) has a dangling symlink that breaks action staging
+on the Helix runners, so do not move the pin until the owner says it is fixed.
+Every job runs on `[self-hosted, linux, x64, helix]`.

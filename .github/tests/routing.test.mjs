@@ -80,17 +80,34 @@ test('trusted jobs load main and provider keys exist only after the explicit ver
   assert.deepEqual(assess.permissions, {actions: 'read', contents: 'read', 'pull-requests': 'read', issues: 'read'});
 });
 
-test('approval and repair consume complete evidence from their own run, without provider credentials', () => {
-  for (const name of ['approve-and-merge', 'apply-repair']) {
+test('approval and repair consume the review record through job outputs, without artifacts or provider credentials', () => {
+  const text = readFileSync(new URL('../workflows/ci.yml', import.meta.url), 'utf8');
+  assert.doesNotMatch(text, /(upload|download)-artifact/);
+  for (const [name, operation] of [['approve-and-merge', 'gate'], ['apply-repair', 'repair']]) {
     const job = workflow.jobs[name];
     assert.ok(!JSON.stringify(job).includes('provider-key'));
-    const load = job.steps.find(step => step.uses?.startsWith('actions/download-artifact@'));
-    assert.equal(load.with.name, 'clouseau-acceptance-${{ github.run_id }}-${{ github.run_attempt }}');
+    const step = job.steps.find(step => step.with?.operation === operation);
+    assert.equal(step.with['record-transport'], 'job-output');
+    assert.equal(step.with['review-record'], '${{ needs.assess-intent.outputs.review-record }}');
   }
   const gate = workflow.jobs['approve-and-merge'].steps.find(step => step.with?.operation === 'gate');
   assert.equal(gate.with['native-gate'], 'true');
-  const load = workflow.jobs['approve-and-merge'].steps.find(step => step.uses?.startsWith('actions/download-artifact@'));
-  assert.equal(allowed(load.if, context('pull_request_target', {record: false})), false);
+  const assess = workflow.jobs['assess-intent'];
+  assert.equal(assess.outputs['review-record'], '${{ steps.local-review.outputs.review-record || steps.assess.outputs.review-record }}');
+  for (const operation of ['verify-local', 'assess']) {
+    assert.equal(assess.steps.find(step => step.with?.operation === operation).with['record-transport'], 'job-output');
+  }
+});
+
+test('the frozen engine is resolved from the reviewed bootstrap without provenance artifacts and verified before use', () => {
+  const resolve = workflow.jobs['resolve-clouseau'].steps[0];
+  assert.equal(resolve.uses, 'gaulatti/clouseau/scripts/resolve@f5b6f04a5b95090fc0b5dc0e6fec85cc426273f0');
+  assert.deepEqual(resolve.with, {provenance: 'summary'});
+  const steps = workflow.jobs.verify.steps;
+  const engine = steps.findIndex(step => step.with?.operation === 'verify-engine');
+  assert.ok(engine > steps.findIndex(step => step.with?.path === '.clouseau-ci'));
+  assert.ok(engine < steps.findIndex(step => step.uses?.startsWith('actions/setup-node@')));
+  for (const [name, job] of Object.entries(workflow.jobs)) assert.deepEqual(job['runs-on'], ['self-hosted', 'linux', 'x64', 'helix'], name);
 });
 
 test('forks, deleted head repositories and failed assessments cannot load the repair author credential', () => {

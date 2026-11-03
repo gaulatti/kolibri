@@ -61,6 +61,7 @@ jobs:
           github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
           (github.event_name == 'workflow_dispatch' && inputs.pull_request == '' && !inputs.check_author)
         with:
+          fetch-depth: 0
           persist-credentials: false
       - name: Check out this run frozen Clouseau engine
         if: *verify-code
@@ -121,6 +122,38 @@ jobs:
       - name: Run backend tests with source coverage
         if: *verify-code
         run: npm run test:coverage --prefix backend
+      - name: Select the accepted base revision and its protected configuration
+        if: *verify-code
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          # An empty base (new branch, manual run) leaves the stricter exact 100% gate in force.
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" =~ ^0+$ ]]; then
+            echo "COVERAGE_BASE_SHA=" >> "$GITHUB_ENV"
+            cp .github/clouseau.json "$RUNNER_TEMP/clouseau-base.json"
+            exit 0
+          fi
+          git cat-file -e "$BASE_SHA^{commit}"
+          echo "COVERAGE_BASE_SHA=$BASE_SHA" >> "$GITHUB_ENV"
+          # The base revision's file is authoritative; only the initial installation, whose base has none, reads this revision's.
+          if git cat-file -e "$BASE_SHA:.github/clouseau.json" 2>/dev/null; then
+            git show "$BASE_SHA:.github/clouseau.json" > "$RUNNER_TEMP/clouseau-base.json"
+          else
+            cp .github/clouseau.json "$RUNNER_TEMP/clouseau-base.json"
+          fi
+      - name: Measure the base revision's native coverage baseline
+        if: *verify-code
+        env:
+          CLOUSEAU_ROOT: ${{ github.workspace }}/.clouseau-ci
+        run: |
+          # The baseline is measured by running the base revision's own tests, never this pull request's code.
+          if [[ -z "$COVERAGE_BASE_SHA" ]]; then exit 0; fi
+          git worktree add --detach "$RUNNER_TEMP/base" "$COVERAGE_BASE_SHA"
+          cd "$RUNNER_TEMP/base/backend"
+          npm ci
+          # Same command as `npm run test:coverage`, spelled out because the first base predates that script.
+          npx jest --coverage --coverageReporters=json --coverageReporters=text-summary --coverageProvider=v8 --testTimeout=30000 --collectCoverageFrom='**/*.ts' --coverageThreshold='{}'
+          node "$CLOUSEAU_ROOT/bin/coverage-gate.cjs" totals coverage/coverage-final.json src istanbul > "$RUNNER_TEMP/baseline.json"
       - name: Enforce 100% line and branch coverage
         if: *verify-code
         uses: ./.clouseau-ci
@@ -129,6 +162,9 @@ jobs:
           coverage-format: istanbul
           coverage-report: backend/coverage/coverage-final.json
           source-directory: backend/src
+          config: ${{ runner.temp }}/clouseau-base.json
+          coverage-base-ref: ${{ env.COVERAGE_BASE_SHA }}
+          coverage-baseline: ${{ runner.temp }}/baseline.json
 
   assess-intent:
     if: &review-event >-

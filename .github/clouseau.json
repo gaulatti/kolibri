@@ -17,6 +17,9 @@
   },
   "manual_reviewer": "gaulatti",
   "merge_mode": "automatic",
+  "coverage": {
+    "mode": "changed_lines"
+  },
   "repository_policy": ".github/clouseau.md",
   "readme": "README.md",
   "sensitive_paths": [],

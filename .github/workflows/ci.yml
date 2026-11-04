@@ -152,7 +152,7 @@ jobs:
           git worktree prune
           rm -rf "$RUNNER_TEMP/base"
           git worktree prune
-          trap 'git worktree remove --force "$RUNNER_TEMP/base" 2>/dev/null || true; git worktree prune' EXIT
+          trap 'cd "$GITHUB_WORKSPACE" 2>/dev/null || cd /; git worktree remove --force "$RUNNER_TEMP/base" 2>/dev/null || true; git worktree prune 2>/dev/null || true' EXIT
           git worktree add --detach "$RUNNER_TEMP/base" "$COVERAGE_BASE_SHA"
           cd "$RUNNER_TEMP/base/backend"
           npm ci

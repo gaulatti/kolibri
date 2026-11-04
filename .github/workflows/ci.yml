@@ -79,7 +79,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: *verify-code
         with:
-          node-version: 22
+          node-version-file: .nvmrc
       - name: Set up Python for frozen shared tests
         if: *verify-code
         uses: actions/setup-python@v5
@@ -98,6 +98,11 @@ jobs:
         run: |
           npm ci --prefix .github/tests --ignore-scripts --no-audit --no-fund
           npm test --prefix .github/tests
+      - name: Audit dependencies against the checked-in policy
+        if: *verify-code
+        run: |
+          node --test scripts/audit/policy.test.mjs
+          node scripts/audit/policy.mjs
       - name: Install backend dependencies
         if: *verify-code
         run: npm ci --prefix backend

@@ -25,6 +25,24 @@ Recommended local tools:
 - local nginx and a trusted wildcard development certificate when using
   `https://kolibri.dev` and `https://api.kolibri.dev`.
 
+### Node.js runtime and dependency audit
+
+The supported runtime is Node.js 24 (React Router 8 requires 22.22 or newer).
+`.nvmrc` is the single source: local version managers read it, every GitHub
+workflow passes it to `actions/setup-node`, and the backend, frontend and
+infrastructure packages declare `engines.node` (`>=24.0.0 <25`). The backend and
+frontend Dockerfiles and the GitLab job already use `node:24` images.
+
+CI runs `node scripts/audit/policy.mjs`, which executes `npm audit` for the
+backend, frontend and infrastructure packages. It reports production and
+build-only exposure separately. A high or critical advisory fails unless
+`scripts/audit/exceptions.json` has a package-specific exception, and every
+remaining lower-severity advisory must be covered by an exception with an owner,
+rationale, evidence and `reviewBy` date. An expired exception fails the check, so
+exceptions are reviewed rather than silently kept. The backend pins `multer` to
+2.5.0 through an npm `overrides` entry because `@nestjs/platform-express@11`
+bundles 2.4.0, which has a published advisory; Kolibri has no upload route.
+
 ## Configuration ownership
 
 ### Infrastructure `.env`

@@ -1,0 +1,49 @@
+[
+  {
+    "directory": "backend",
+    "exposure": "build",
+    "severities": ["low", "moderate"],
+    "owner": "gaulatti",
+    "rationale": "Remaining advisories are in the Jest, ESLint, Nest CLI and ts-jest toolchain (glob/minimatch ReDoS and similar). They run only on trusted source in local development and CI, never in the production image, which installs with npm ci --omit=dev.",
+    "evidence": "npm audit --omit=dev reports zero advisories for backend; high and critical advisories are removed by the lockfile update.",
+    "reviewBy": "2027-02-01"
+  },
+  {
+    "directory": "frontend",
+    "exposure": "build",
+    "severities": ["low", "moderate"],
+    "owner": "gaulatti",
+    "rationale": "Remaining advisories are in the Storybook and Vite plugin toolchain. They run only on trusted source during development and the static build; the shipped bundle does not include them.",
+    "evidence": "npm audit --omit=dev reports zero advisories for frontend.",
+    "reviewBy": "2027-02-01"
+  },
+  {
+    "directory": "infrastructure",
+    "exposure": "build",
+    "severities": ["low", "moderate"],
+    "owner": "gaulatti",
+    "rationale": "Remaining advisories are in the Jest test toolchain. They run only on trusted source locally and in CI.",
+    "evidence": "npm audit lists these packages only through devDependencies.",
+    "reviewBy": "2027-02-01"
+  },
+  {
+    "directory": "infrastructure",
+    "exposure": "production",
+    "package": "aws-cdk-lib",
+    "severities": ["moderate"],
+    "owner": "gaulatti",
+    "rationale": "aws-cdk-lib bundles minimatch; the globparts amplification applies to attacker-controlled glob patterns, but CDK only evaluates patterns written in this repository's own stack source during synth. No runtime service links it.",
+    "evidence": "Advisory path is aws-cdk-lib -> minimatch; the fix requires a new aws-cdk-lib bundle.",
+    "reviewBy": "2027-02-01"
+  },
+  {
+    "directory": "infrastructure",
+    "exposure": "production",
+    "package": "minimatch",
+    "severities": ["moderate"],
+    "owner": "gaulatti",
+    "rationale": "Same bundled aws-cdk-lib minimatch dependency; see the aws-cdk-lib exception.",
+    "evidence": "Advisory path is aws-cdk-lib -> minimatch.",
+    "reviewBy": "2027-02-01"
+  }
+]

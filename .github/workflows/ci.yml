@@ -148,6 +148,11 @@ jobs:
         run: |
           # The baseline is measured by running the base revision's own tests, never this pull request's code.
           if [[ -z "$COVERAGE_BASE_SHA" ]]; then exit 0; fi
+          # A killed earlier run can leave a stale registration in the persistent checkout.
+          git worktree prune
+          rm -rf "$RUNNER_TEMP/base"
+          git worktree prune
+          trap 'git worktree remove --force "$RUNNER_TEMP/base" 2>/dev/null || true; git worktree prune' EXIT
           git worktree add --detach "$RUNNER_TEMP/base" "$COVERAGE_BASE_SHA"
           cd "$RUNNER_TEMP/base/backend"
           npm ci

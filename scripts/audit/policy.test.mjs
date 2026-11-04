@@ -3,7 +3,7 @@ import {mkdtempSync, mkdirSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import test from 'node:test';
-import {PACKAGES, evaluate, main, validateExceptions} from './policy.mjs';
+import {PACKAGES, evaluate, main, runAudit, validateExceptions} from './policy.mjs';
 
 const report = (...entries) => ({vulnerabilities: Object.fromEntries(entries.map(([name, severity]) => [name, {name, severity}]))});
 const exception = (overrides = {}) => ({
@@ -131,4 +131,36 @@ test('main fails on an expired exception', () => {
   const audit = (_root, directory, omitDev) => (directory === 'backend' && !omitDev ? report(['glob', 'moderate']) : report());
   assert.equal(main({root: project([exception({reviewBy: '2026-11-03'})]), today, audit, log: line => lines.push(line)}), 1);
   assert.ok(lines.includes('backend: moderate build advisory in glob - exception expired on 2026-11-03'));
+});
+
+const failing = stdout => () => { throw Object.assign(new Error('Command failed: npm audit'), stdout === undefined ? {} : {stdout}); };
+
+test('runAudit returns the parsed report of a clean audit', () => {
+  assert.deepEqual(runAudit('/r', 'backend', false, () => '{"vulnerabilities":{}}'), {vulnerabilities: {}});
+});
+
+test('runAudit returns the parsed report of a non-zero exit that carries advisory JSON', () => {
+  const advisory = {vulnerabilities: {glob: {name: 'glob', severity: 'moderate'}}};
+  assert.deepEqual(runAudit('/r', 'backend', false, failing(JSON.stringify(advisory))), advisory);
+});
+
+test('runAudit throws when the executor fails without stdout', () => {
+  assert.throws(() => runAudit('/r', 'backend', false, failing(undefined)), /npm audit produced no output \(Command failed: npm audit\)/);
+  assert.throws(() => runAudit('/r', 'backend', false, failing('')), /npm audit produced no output/);
+});
+
+test('runAudit throws when stdout is not valid JSON, returned or carried by a failure', () => {
+  assert.throws(() => runAudit('/r', 'backend', false, () => 'not json'), /npm audit output is not valid JSON/);
+  assert.throws(() => runAudit('/r', 'backend', false, failing('<html>502</html>')), /npm audit output is not valid JSON/);
+});
+
+test('runAudit passes --omit=dev only when requested and runs in the package directory', () => {
+  const calls = [];
+  const exec = (command, args, options) => { calls.push({command, args, cwd: options.cwd}); return '{"vulnerabilities":{}}'; };
+  runAudit('/r', 'frontend', false, exec);
+  runAudit('/r', 'frontend', true, exec);
+  assert.deepEqual(calls, [
+    {command: 'npm', args: ['audit', '--json'], cwd: '/r/frontend'},
+    {command: 'npm', args: ['audit', '--json', '--omit=dev'], cwd: '/r/frontend'},
+  ]);
 });

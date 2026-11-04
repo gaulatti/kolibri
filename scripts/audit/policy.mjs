@@ -73,7 +73,7 @@ export function evaluate({directory, fullAudit, productionAudit, exceptions, tod
   return {violations, covered};
 }
 
-function runAudit(root, directory, omitDev) {
+export function runAudit(root, directory, omitDev, exec = execFileSync) {
   const args = ['audit', '--json', ...(omitDev ? ['--omit=dev'] : [])];
   const parse = text => {
     try {
@@ -83,7 +83,7 @@ function runAudit(root, directory, omitDev) {
     }
   };
   try {
-    return parse(execFileSync('npm', args, {cwd: join(root, directory), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024}));
+    return parse(exec('npm', args, {cwd: join(root, directory), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024}));
   } catch (error) {
     if (error.message === 'npm audit output is not valid JSON') throw error;
     // npm audit exits non-zero when advisories exist; its JSON is on stdout.

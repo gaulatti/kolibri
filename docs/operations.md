@@ -39,7 +39,7 @@ build-only exposure separately. A high or critical advisory fails unless
 `scripts/audit/exceptions.json` has a package-specific exception, and every
 remaining lower-severity advisory must be covered by an exception with an owner,
 rationale, evidence and `reviewBy` date. An expired exception fails the check, so
-exceptions are reviewed rather than silently kept. The backend pins `multer` to
+exceptions are reviewed rather than silently kept. An audit that cannot run or returns no vulnerabilities report (registry unreachable, unparseable output) also fails the check, naming the directory and the npm error. The backend pins `multer` to
 2.5.0 through an npm `overrides` entry because `@nestjs/platform-express@11`
 bundles 2.4.0, which has a published advisory; Kolibri has no upload route.
 

@@ -16,8 +16,10 @@ test('a clean tree has no violations', () => {
   assert.deepEqual(evaluate({directory: 'backend', fullAudit: report(), productionAudit: report(), exceptions: [], today}), {violations: [], covered: []});
 });
 
-test('a missing audit report is treated as clean', () => {
-  assert.deepEqual(evaluate({directory: 'backend', fullAudit: {}, productionAudit: undefined, exceptions: [], today}), {violations: [], covered: []});
+test('a report without a vulnerabilities object is an error, never clean', () => {
+  assert.throws(() => evaluate({directory: 'backend', fullAudit: {}, productionAudit: report(), exceptions: [], today}), /no vulnerabilities report/);
+  assert.throws(() => evaluate({directory: 'backend', fullAudit: report(), productionAudit: undefined, exceptions: [], today}), /no vulnerabilities report/);
+  assert.throws(() => evaluate({directory: 'backend', fullAudit: {error: {summary: 'registry down'}}, productionAudit: report(), exceptions: [], today}), /registry down/);
 });
 
 test('build-only low and moderate advisories are covered by a directory exception', () => {
@@ -100,4 +102,33 @@ test('main fails and names the offending advisory', () => {
   const audit = (_root, directory, omitDev) => (directory === 'frontend' && !omitDev ? report(['vite', 'high']) : report());
   assert.equal(main({root: project([]), today, audit, log: line => lines.push(line)}), 1);
   assert.ok(lines.includes('frontend: high build advisory in vite - no exception'));
+});
+
+test('main fails when npm audit returns error JSON, naming the directory and the npm error', () => {
+  const lines = [];
+  const audit = (_root, directory) => (directory === 'frontend' ? {error: {code: 'ENOAUDIT', summary: 'registry unreachable'}} : report());
+  assert.equal(main({root: project([]), today, audit, log: line => lines.push(line)}), 1);
+  assert.ok(lines.includes('frontend: audit could not be evaluated - npm audit returned no vulnerabilities report: registry unreachable'));
+});
+
+test('main fails when the audit cannot be parsed or cannot run', () => {
+  for (const message of ['npm audit output is not valid JSON', 'npm audit produced no output (spawn npm ENOENT)']) {
+    const lines = [];
+    const audit = () => { throw new Error(message); };
+    assert.equal(main({root: project([]), today, audit, log: line => lines.push(line)}), 1);
+    assert.deepEqual(lines, PACKAGES.map(p => `${p}: audit could not be evaluated - ${message}`));
+  }
+});
+
+test('main passes a clean audit with an empty vulnerabilities object', () => {
+  const lines = [];
+  assert.equal(main({root: project([]), today, audit: () => ({vulnerabilities: {}}), log: line => lines.push(line)}), 0);
+  assert.equal(lines.length, PACKAGES.length);
+});
+
+test('main fails on an expired exception', () => {
+  const lines = [];
+  const audit = (_root, directory, omitDev) => (directory === 'backend' && !omitDev ? report(['glob', 'moderate']) : report());
+  assert.equal(main({root: project([exception({reviewBy: '2026-11-03'})]), today, audit, log: line => lines.push(line)}), 1);
+  assert.ok(lines.includes('backend: moderate build advisory in glob - exception expired on 2026-11-03'));
 });

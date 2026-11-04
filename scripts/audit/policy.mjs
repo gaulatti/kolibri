@@ -34,8 +34,16 @@ export function validateExceptions(exceptions) {
   return exceptions;
 }
 
+// An audit that did not produce a vulnerabilities object (for example npm's
+// {"error": {...}} when the registry is unreachable) has evaluated nothing and
+// must never be read as zero advisories.
 function advisories(report) {
-  return Object.values(report?.vulnerabilities ?? {}).map(({name, severity}) => ({name, severity}));
+  const vulnerabilities = report?.vulnerabilities;
+  if (vulnerabilities === null || typeof vulnerabilities !== 'object' || Array.isArray(vulnerabilities)) {
+    const npmError = report?.error?.summary ?? report?.error?.code ?? report?.error?.message;
+    throw new Error(`npm audit returned no vulnerabilities report${npmError ? `: ${npmError}` : ''}`);
+  }
+  return Object.values(vulnerabilities).map(({name, severity}) => ({name, severity}));
 }
 
 // Classify every advisory of one package tree and return the violations.
@@ -67,12 +75,20 @@ export function evaluate({directory, fullAudit, productionAudit, exceptions, tod
 
 function runAudit(root, directory, omitDev) {
   const args = ['audit', '--json', ...(omitDev ? ['--omit=dev'] : [])];
+  const parse = text => {
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error('npm audit output is not valid JSON');
+    }
+  };
   try {
-    return JSON.parse(execFileSync('npm', args, {cwd: join(root, directory), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024}));
+    return parse(execFileSync('npm', args, {cwd: join(root, directory), encoding: 'utf8', maxBuffer: 64 * 1024 * 1024}));
   } catch (error) {
+    if (error.message === 'npm audit output is not valid JSON') throw error;
     // npm audit exits non-zero when advisories exist; its JSON is on stdout.
-    if (error.stdout) return JSON.parse(error.stdout);
-    throw error;
+    if (!error.stdout) throw new Error(`npm audit produced no output (${error.message.split('\n')[0]})`);
+    return parse(error.stdout);
   }
 }
 
@@ -80,13 +96,21 @@ export function main({root, today, audit = runAudit, log = console.log} = {}) {
   const exceptions = validateExceptions(JSON.parse(readFileSync(join(root, 'scripts/audit/exceptions.json'), 'utf8')));
   let failed = false;
   for (const directory of PACKAGES) {
-    const {violations, covered} = evaluate({
-      directory,
-      fullAudit: audit(root, directory, false),
-      productionAudit: audit(root, directory, true),
-      exceptions,
-      today,
-    });
+    let result;
+    try {
+      result = evaluate({
+        directory,
+        fullAudit: audit(root, directory, false),
+        productionAudit: audit(root, directory, true),
+        exceptions,
+        today,
+      });
+    } catch (error) {
+      failed = true;
+      log(`${directory}: audit could not be evaluated - ${error.message}`);
+      continue;
+    }
+    const {violations, covered} = result;
     const count = (list, exposure) => list.filter(v => v.exposure === exposure).length;
     log(`${directory}: ${count(covered, 'production')} production and ${count(covered, 'build')} build-only advisories covered by exceptions`);
     for (const v of violations) {

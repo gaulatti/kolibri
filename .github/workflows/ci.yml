@@ -32,7 +32,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   resolve-clouseau:
-    runs-on: [self-hosted, linux, x64, helix]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
@@ -50,7 +50,7 @@ jobs:
       ${{ (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
           (github.event_name == 'workflow_dispatch' && inputs.pull_request == '' && !inputs.check_author)) && 'verify' || 'metadata-only' }}
     needs: resolve-clouseau
-    runs-on: [self-hosted, linux, x64, helix]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       CLOUSEAU_ENGINE_SHA: ${{ needs.resolve-clouseau.outputs.sha }}
@@ -180,7 +180,7 @@ jobs:
     if: &review-event >-
       (github.event_name == 'pull_request_target' && !github.event.pull_request.draft) ||
       (github.event_name == 'push' && !github.event.deleted && startsWith(github.ref, 'refs/heads/policy-install/'))
-    runs-on: [self-hosted, linux, x64, helix]
+    runs-on: ubuntu-latest
     timeout-minutes: 70
     permissions:
       actions: read
@@ -290,7 +290,7 @@ jobs:
     # Always resolve the job name; only trusted, ready PR events run its steps.
     # A failed assessment must still fail the required native approval check.
     if: always()
-    runs-on: [self-hosted, linux, x64, helix]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write
@@ -340,7 +340,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       needs.assess-intent.result == 'success' && needs.approve-and-merge.result == 'failure' &&
       fromJSON(needs.assess-intent.outputs.assessment).repair_digest != ''
-    runs-on: [self-hosted, linux, x64, helix]
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
@@ -376,7 +376,7 @@ jobs:
   finalize-merge:
     needs: [assess-intent, approve-and-merge, resolve-clouseau]
     if: *review-event
-    runs-on: [self-hosted, linux, x64, helix]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
@@ -407,7 +407,7 @@ jobs:
     if: >-
       (github.event_name == 'issue_comment' && github.event.issue.pull_request && startsWith(github.event.comment.body, '/approve-intent ')) ||
       (github.event_name == 'workflow_dispatch' && inputs.pull_request != '' && !inputs.check_author)
-    runs-on: [self-hosted, linux, x64, helix]
+    runs-on: ubuntu-latest
     timeout-minutes: 3
     permissions:
       contents: read
@@ -436,7 +436,7 @@ jobs:
 
   check-author:
     if: github.event_name == 'workflow_dispatch' && inputs.check_author
-    runs-on: [self-hosted, linux, x64, helix]
+    runs-on: ubuntu-latest
     timeout-minutes: 3
     permissions: {}
     steps:

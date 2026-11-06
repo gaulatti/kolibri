@@ -478,7 +478,7 @@ This is a partial success. Download remains available.
 
 ## Pull request verification and Clouseau review
 
-Every PR runs `.github/workflows/ci.yml` on the Helix self-hosted runners: the
+Every PR runs `.github/workflows/ci.yml` on GitHub-hosted runners (`ubuntu-latest`): the
 backend build, frontend type-check, infrastructure tests, neutral contract
 validation and tests, backend tests with source coverage, and Clouseau's exact
 100% line and branch coverage gate over `backend/src`. Run the same commands
@@ -507,5 +507,5 @@ SHA and digest stay in the run summary), and the review record moves from
 assessment to gate and repair as the bounded `review-record` job output
 (`record-transport: job-output`). The resolver is pinned to Clouseau `f5b6f04`;
 later Clouseau main (`c709020`) has a dangling symlink that breaks action staging
-on the Helix runners, so do not move the pin until the owner says it is fixed.
-Every job runs on `[self-hosted, linux, x64, helix]`.
+on the former self-hosted runners; keep the pin until a newer engine is verified
+on hosted runners. Every job runs on `ubuntu-latest`.

@@ -107,7 +107,7 @@ test('the frozen engine is resolved from the reviewed bootstrap without provenan
   const engine = steps.findIndex(step => step.with?.operation === 'verify-engine');
   assert.ok(engine > steps.findIndex(step => step.with?.path === '.clouseau-ci'));
   assert.ok(engine < steps.findIndex(step => step.uses?.startsWith('actions/setup-node@')));
-  for (const [name, job] of Object.entries(workflow.jobs)) assert.deepEqual(job['runs-on'], ['self-hosted', 'linux', 'x64', 'helix'], name);
+  for (const [name, job] of Object.entries(workflow.jobs)) assert.equal(job['runs-on'], 'ubuntu-latest', name);
 });
 
 test('forks, deleted head repositories and failed assessments cannot load the repair author credential', () => {

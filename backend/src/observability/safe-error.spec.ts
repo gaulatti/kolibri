@@ -67,4 +67,10 @@ describe('safe error metadata', () => {
       cause: 'Unknown cause',
     });
   });
+
+  it('omits an empty primitive failure message and fields that sanitize to nothing', () => {
+    expect(safeErrorMetadata('')).toEqual({ errorName: 'UnknownError' });
+    const metadata = safeErrorMetadata({ name: 'E', command: '\u0000' });
+    expect(metadata.command).toBeUndefined();
+  });
 });

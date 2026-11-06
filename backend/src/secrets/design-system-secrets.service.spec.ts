@@ -528,4 +528,19 @@ describe('DesignSystemSecretsService', () => {
       }),
     );
   });
+
+  it('stores only the Figma token when no npm configuration exists', async () => {
+    send.mockResolvedValueOnce({ SecretString: JSON.stringify({}) });
+
+    await service.setRuntimeCredentials(owner, designSystemId, {
+      figmaAccessToken: credentialsInput.figmaAccessToken,
+    });
+
+    const write = sentCommand(1) as PutSecretValueCommand;
+    expect(JSON.parse(write.input.SecretString!) as unknown).toEqual({
+      [designSystemId]: {
+        figma: { accessToken: credentialsInput.figmaAccessToken },
+      },
+    });
+  });
 });

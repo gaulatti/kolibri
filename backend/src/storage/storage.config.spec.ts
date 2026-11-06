@@ -25,6 +25,16 @@ describe('storage configuration', () => {
     });
   });
 
+  it('defaults the presigned URL lifetime to five minutes when unset', () => {
+    expect(
+      storageConfiguration({ storage: { driver: 's3', bucket: 'bucket' } }),
+    ).toEqual({
+      driver: 's3',
+      bucket: 'bucket',
+      presignedUrlTtlSeconds: 300,
+    });
+  });
+
   it('rejects missing or unsafe production storage settings', () => {
     expect(() => storageConfiguration({ postgresql: {} })).toThrow(
       'invalid storage settings',

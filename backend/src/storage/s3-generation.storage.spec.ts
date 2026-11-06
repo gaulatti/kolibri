@@ -141,6 +141,18 @@ describe('S3GenerationStorage contract', () => {
     ).rejects.toMatchObject({ status: 404 });
   });
 
+  it('rejects references that name no package file, an extra segment or a non-zip file', async () => {
+    for (const tail of [
+      'package',
+      'package/file.zip/extra',
+      'package/file.tar',
+    ]) {
+      await expect(
+        storage.resolveArtifactAccess(`s3:kolibri/runs/${runId}/${tail}`),
+      ).rejects.toMatchObject({ status: 404 });
+    }
+  });
+
   it('requires a configured bucket before storage operations', async () => {
     const missingBucket = new S3GenerationStorage(
       { send } as unknown as S3Client,

@@ -176,4 +176,11 @@ describe('NpmPublicationService', () => {
       service.publishVersion({ version: '1.2.4', token }, prepared),
     ).resolves.toBe('1.2.4');
   });
+
+  it('reports a registry failure that has no response body without detail', async () => {
+    registryFetch.mockResolvedValueOnce(new Response('', { status: 502 }));
+    await expect(
+      service.resolveNextVersion('@kolibri/ui', token),
+    ).rejects.toMatchObject({ statusCode: 502, stderr: undefined });
+  });
 });

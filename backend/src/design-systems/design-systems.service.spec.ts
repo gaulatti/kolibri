@@ -166,3 +166,53 @@ describe('DesignSystemsService', () => {
     expect(remove).not.toHaveBeenCalled();
   });
 });
+
+describe('DesignSystemsService optional fields and single reads', () => {
+  const findOne = jest.fn();
+  const create = jest.fn((value: Partial<DesignSystem>) => value);
+  const save = jest.fn((value: DesignSystem) => Promise.resolve(value));
+  const service = new DesignSystemsService(
+    { findOne, create, save } as unknown as Repository<DesignSystem>,
+    {} as unknown as DesignSystemSecretsService,
+    {} as unknown as GenerationStorage,
+  );
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it('returns one owned design system', async () => {
+    findOne.mockResolvedValue(record());
+    await expect(service.get(owner, record().id)).resolves.toMatchObject({
+      id: record().id,
+      name: 'Kolibri UI',
+    });
+    expect(findOne).toHaveBeenCalledWith({
+      where: { id: record().id, ownerId: owner.userReferenceId },
+    });
+  });
+
+  it('stores a missing or blank description as null on create', async () => {
+    const withoutDescription = await service.create(owner, {
+      name: 'No description',
+    });
+    expect(withoutDescription.description).toBeNull();
+    const blank = await service.create(owner, {
+      name: 'Blank',
+      description: '   ',
+    });
+    expect(blank.description).toBeNull();
+  });
+
+  it('clears the description on update when it is blank and leaves it alone when omitted', async () => {
+    findOne.mockResolvedValue(record());
+    const cleared = await service.update(owner, record().id, {
+      description: '  ',
+    });
+    expect(cleared.description).toBeNull();
+
+    findOne.mockResolvedValue(record());
+    const renamed = await service.update(owner, record().id, {
+      name: 'Renamed',
+    });
+    expect(renamed.description).toBe('Shared application components');
+  });
+});

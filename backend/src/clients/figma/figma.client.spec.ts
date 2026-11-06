@@ -120,4 +120,20 @@ describe('FigmaClient', () => {
       new FigmaClient().loadFixture('package.json'),
     ).resolves.toMatchObject({ name: 'backend' });
   });
+
+  it('falls back to the status text, then to no detail, when the error body is empty', async () => {
+    const fetchMock = jest
+      .spyOn(global, 'fetch')
+      .mockResolvedValueOnce(
+        new Response('', { status: 404, statusText: 'Not Found' }),
+      )
+      .mockResolvedValueOnce(new Response('', { status: 404 }));
+    await expect(
+      new FigmaClient().loadFile('file-key', 'figma-token'),
+    ).rejects.toMatchObject({ statusCode: 404, stderr: 'Not Found' });
+    await expect(
+      new FigmaClient().loadFile('file-key', 'figma-token'),
+    ).rejects.toMatchObject({ statusCode: 404, stderr: undefined });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
 });

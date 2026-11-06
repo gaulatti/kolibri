@@ -191,4 +191,20 @@ describe('PackageAssemblerService', () => {
       'Generated views and behavior',
     );
   });
+
+  it('assembles the composable contract without root assets when none are supplied', () => {
+    const generated = assembler.assemblePackage({
+      packageName: '@acme/news-kit',
+      packageVersion: '2.0.0',
+      packageRegistry: 'https://registry.npmjs.org',
+      packageDirectoryName: 'acme-news-kit',
+      generationContract: 'composable-v1',
+      cssArtifact: { path: 'styles/kolibri.css', content: '.card {}' },
+      reactArtifacts: [{ path: 'index.tsx', content: 'export {};' }],
+    });
+    const paths = generated.map((artifact) => artifact.path);
+    expect(paths).toContain('acme-news-kit/styles/kolibri.css');
+    expect(paths.some((path) => path.includes('/assets/'))).toBe(false);
+    expect(paths).not.toContain('acme-news-kit/kolibri.manifest.json');
+  });
 });

@@ -604,4 +604,49 @@ describe('GenerationService', () => {
       service.getArtifactAccess(owner, runId),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  it('reports a generic runtime failure when generation stops before any named step', async () => {
+    await service.queue(owner, designSystemId);
+    recordEvent.mockRejectedValueOnce(new Error('event store unavailable'));
+    await scheduledTask?.();
+
+    expect(run.status).toBe(GenerationRunStatus.FAILED);
+    expect(recordEvent).toHaveBeenCalledWith(
+      runId,
+      GENERATION_PHASES.DIAGNOSTIC_ERROR,
+      'GENERATION_RUNTIME_FAILED — Generation stopped unexpectedly.',
+    );
+  });
+
+  it('records diagnostics with control characters, blank fields and no location safely', async () => {
+    importDesignSystem.mockReturnValue({
+      tokens: [],
+      fontSources: [],
+      imageReferences: [],
+      components: [],
+      diagnostics: [
+        { severity: 'warning', code: '\u0000', message: '\u001f\u007f' },
+        {
+          severity: 'warning',
+          code: 'CODE\u0007X',
+          message: 'line\u0001break',
+          component: 'Card\u007fName',
+          nodeId: '9:9',
+        },
+      ],
+    });
+    await service.queue(owner, designSystemId);
+    await scheduledTask?.();
+
+    expect(recordEvent).toHaveBeenCalledWith(
+      runId,
+      GENERATION_PHASES.DIAGNOSTIC_WARNING,
+      'GENERATION_DIAGNOSTIC — Generation diagnostic',
+    );
+    expect(recordEvent).toHaveBeenCalledWith(
+      runId,
+      GENERATION_PHASES.DIAGNOSTIC_WARNING,
+      'CODE X — line break — Component: Card Name — Node: 9:9',
+    );
+  });
 });

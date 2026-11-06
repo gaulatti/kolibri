@@ -245,6 +245,25 @@ describe('DashboardService', () => {
     expect(report.summary.medianDurationMs).toBeNull();
     expect(report.generationEfficiency).toEqual([]);
   });
+
+  it('labels efficiency points for runs whose design system is not in the owner list', async () => {
+    findDesignSystems.mockResolvedValue([]);
+    const orphan = run({
+      id: 'orphan',
+      designSystemId: 'unlisted',
+      status: GenerationRunStatus.SUCCEEDED,
+      createdAt: '2026-08-03T08:00:00Z',
+      durationMs: 5,
+    });
+    getMany.mockResolvedValue([orphan]);
+    const report = await service.report(owner);
+    expect(report.generationEfficiency).toEqual([
+      expect.objectContaining({
+        runId: 'orphan',
+        designSystemName: 'Design system',
+      }),
+    ]);
+  });
 });
 
 function chainableBuilder(

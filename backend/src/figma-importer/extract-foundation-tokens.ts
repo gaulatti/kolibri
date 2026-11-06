@@ -174,7 +174,7 @@ function extractDocumentedShadows(page: FigmaNode, tokens: KolibriToken[]) {
     const visual = (node.children ?? []).find((child) =>
       child.effects?.some((effect) => effect.type.includes('SHADOW')),
     );
-    const value = visual ? shadowCss(visual) : undefined;
+    const value = visual?.effects ? shadowCss(visual.effects) : undefined;
     if (label && value)
       tokens.push(
         token(`shadow.${tokenSegment(label)}`, 'shadow', value, visual!.id),
@@ -234,8 +234,10 @@ function firstDescendantSolid(root: FigmaNode) {
   return result;
 }
 
-function shadowCss(node: FigmaNode): string | undefined {
-  const effects = (node.effects ?? [])
+function shadowCss(
+  nodeEffects: NonNullable<FigmaNode['effects']>,
+): string | undefined {
+  const effects = nodeEffects
     .filter(
       (effect) => effect.visible !== false && effect.type.includes('SHADOW'),
     )

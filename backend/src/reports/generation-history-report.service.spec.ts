@@ -168,4 +168,19 @@ describe('GenerationHistoryReportService', () => {
     });
     expect(report.columns.length).toBeGreaterThan(1);
   });
+
+  it('reports unset filters as null and defaults to newest-first ordering', async () => {
+    const filters = { page: 1, pageSize: 25 } as GenerationHistoryQueryDto;
+    const report = await service.generate(owner, filters);
+    expect(report.appliedFilters).toEqual({
+      designSystemId: null,
+      text: null,
+      status: null,
+      startDate: null,
+      endDate: null,
+      sortDirection: HistorySortDirection.DESC,
+      page: 1,
+      pageSize: 25,
+    });
+  });
 });

@@ -28,7 +28,7 @@ export function variantAxesForComponent(c: ImportedComponent): GenericAxis[] {
 }
 
 export function variantPropName(axis: string): string {
-  const source = axis.split('.').at(-1) ?? axis;
+  const source = axis.slice(axis.lastIndexOf('.') + 1);
   const parts = source.split(/[^a-zA-Z0-9]+/).filter(Boolean);
   const result = parts
     .map((part, index) =>

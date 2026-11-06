@@ -71,3 +71,49 @@ describe('LocalRuntimeConfigurationClient', () => {
     ).rejects.toBeDefined();
   });
 });
+
+describe('LocalRuntimeConfigurationClient persisted state', () => {
+  let directory: string;
+  let filename: string;
+
+  beforeEach(async () => {
+    directory = await mkdtemp(join(tmpdir(), 'kolibri-runtime-'));
+    filename = join(directory, 'runtime.sqlite');
+  });
+
+  afterEach(async () => {
+    await rm(directory, { recursive: true, force: true });
+  });
+
+  it('reloads configuration from an existing database file in a new process', async () => {
+    const configuration = JSON.stringify({ stored: true });
+    await new LocalRuntimeConfigurationClient(filename).send(
+      new PutSecretValueCommand({
+        SecretId: 'local',
+        SecretString: configuration,
+      }),
+    );
+    // A new process has no in-memory handle: force the file to be read again.
+    (
+      LocalRuntimeConfigurationClient as unknown as {
+        databases: Map<string, unknown>;
+      }
+    ).databases.delete(filename);
+
+    await expect(
+      new LocalRuntimeConfigurationClient(filename).send(
+        new GetSecretValueCommand({ SecretId: 'local' }),
+      ),
+    ).resolves.toEqual({ SecretString: configuration });
+  });
+
+  it('returns an empty object when the configuration row is absent', async () => {
+    const client = new LocalRuntimeConfigurationClient(filename);
+    jest.spyOn(client as never, 'getDatabase').mockResolvedValue({
+      exec: () => [],
+    } as never);
+    await expect(
+      client.send(new GetSecretValueCommand({ SecretId: 'local' })),
+    ).resolves.toEqual({ SecretString: '{}' });
+  });
+});

@@ -245,6 +245,18 @@ describe('generation route registration and ownership', () => {
     expect(getOwnedRun).toHaveBeenCalledWith(authenticatedUser, runId);
     expect(stream).toHaveBeenCalledWith(runId, true);
 
+    for (const [status, terminal] of [
+      [GenerationRunStatus.FAILED, true],
+      [GenerationRunStatus.PENDING, false],
+    ] as const) {
+      stream.mockClear();
+      getOwnedRun.mockResolvedValueOnce({ ...runView, status });
+      await request(httpServer)
+        .get(`/v1/generations/${runId}/events`)
+        .expect(200);
+      expect(stream).toHaveBeenCalledWith(runId, terminal);
+    }
+
     stream.mockClear();
     getOwnedRun.mockRejectedValueOnce(
       new NotFoundException('Generation run not found'),

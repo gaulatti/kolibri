@@ -65,4 +65,48 @@ describe('SpawnNpmProcessRunner', () => {
       new SpawnNpmProcessRunner().run(directory, ['--version']),
     ).resolves.toBeUndefined();
   });
+
+  it('reports the terminating signal when npm is killed', async () => {
+    await writeFile(
+      join(directory, 'package.json'),
+      JSON.stringify({
+        name: 'runner-test',
+        version: '1.0.0',
+        scripts: { die: 'node -e "process.kill(process.ppid, 9)"' },
+      }),
+    );
+    let failure: unknown;
+    try {
+      await new SpawnNpmProcessRunner().run(directory, ['run', 'die']);
+    } catch (error) {
+      failure = error;
+    }
+    expect(failure).toBeInstanceOf(NpmProcessError);
+    expect((failure as NpmProcessError).signal).toBeDefined();
+    expect((failure as NpmProcessError).exitCode).toBeUndefined();
+    expect((failure as NpmProcessError).message).toContain('after signal');
+  });
+
+  it('discards the oldest output of a noisy process beyond the bound', async () => {
+    await writeFile(
+      join(directory, 'package.json'),
+      JSON.stringify({
+        name: 'runner-test',
+        version: '1.0.0',
+        scripts: {
+          noisy:
+            "node -e \"process.stderr.write('HEAD-MARKER' + 'a'.repeat(20000)); process.exit(1)\"",
+        },
+      }),
+    );
+    let failure: unknown;
+    try {
+      await new SpawnNpmProcessRunner().run(directory, ['run', 'noisy']);
+    } catch (error) {
+      failure = error;
+    }
+    const stderr = (failure as NpmProcessError).stderr ?? '';
+    expect(stderr).not.toContain('HEAD-MARKER');
+    expect(stderr.length).toBeGreaterThan(0);
+  });
 });

@@ -20,26 +20,28 @@ export class ReactStoryGenerator {
     const availableParts = new Set(
       (component.parts ?? []).map((part) => part.name),
     );
-    const complete = (component.behavior?.requiredParts ?? []).every((part) =>
+    const behavior = component.behavior;
+    const complete = (behavior?.requiredParts ?? []).every((part) =>
       availableParts.has(part),
     );
-    const hasAdapter = Boolean(component.behavior?.adapterRequired) && complete;
+    const adapterKind =
+      behavior?.adapterRequired && complete ? behavior.kind : undefined;
     let story = this.story(component);
-    if (!hasAdapter && component.behavior?.adapterRequired) {
+    if (adapterKind === undefined && behavior?.adapterRequired) {
       story = story.replace(
         `import { ${name} } from './${name}';`,
         `import { ${name}View as ${name} } from './${name}.view';`,
       );
     }
-    if (hasAdapter) {
+    if (adapterKind !== undefined) {
       const storybookAssertions =
-        component.behavior?.kind === 'dialog' ? 'expect' : 'expect, userEvent';
+        adapterKind === 'dialog' ? 'expect' : 'expect, userEvent';
       story = story.replace(
         "import type { Meta, StoryObj } from '@storybook/react-vite';",
         `import type { Meta, StoryObj } from '@storybook/react-vite';\nimport { ${storybookAssertions} } from 'storybook/test';`,
       );
     }
-    if (hasAdapter && component.behavior?.kind === 'accordion') {
+    if (adapterKind === 'accordion') {
       story = story.replace(
         `component: ${name},`,
         `component: ${name},\n  args: { defaultOpenItems: [0] },`,
@@ -49,8 +51,8 @@ export class ReactStoryGenerator {
         `<${name} defaultOpenItems={[0]} {...`,
       );
     } else if (
-      hasAdapter &&
-      ['dialog', 'popover', 'menu'].includes(component.behavior?.kind ?? '')
+      adapterKind !== undefined &&
+      ['dialog', 'popover', 'menu'].includes(adapterKind)
     ) {
       story = story.replace(
         `component: ${name},`,
@@ -58,8 +60,8 @@ export class ReactStoryGenerator {
       );
       story = story.replaceAll(`<${name} {...`, `<${name} defaultOpen {...`);
     }
-    return hasAdapter
-      ? `${story}\n${this.behaviorContractStory(component.behavior?.kind ?? 'none')}\n`
+    return adapterKind !== undefined
+      ? `${story}\n${this.behaviorContractStory(adapterKind)}\n`
       : story;
   }
 

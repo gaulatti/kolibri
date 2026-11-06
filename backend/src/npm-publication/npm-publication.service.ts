@@ -10,10 +10,9 @@ import { assertSafeArtifactPath } from '../storage/storage.utils';
 import {
   NPM_PROCESS_RUNNER,
   NPM_REGISTRY_FETCH,
+  type RegistryFetch,
 } from './npm-publication.constants';
 import type { NpmProcessRunner } from './npm-process.runner';
-
-type RegistryFetch = typeof fetch;
 
 export type NpmPublicationConfiguration = {
   version: string;

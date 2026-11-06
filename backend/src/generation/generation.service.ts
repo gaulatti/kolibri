@@ -513,7 +513,7 @@ function safeDiagnosticMessage(diagnostic: Diagnostic): string {
 function cleanDiagnosticText(value: string): string {
   return [...value]
     .map((character) => {
-      const codePoint = character.codePointAt(0) ?? 0;
+      const codePoint = character.codePointAt(0) as number;
       return codePoint <= 31 || codePoint === 127 ? ' ' : character;
     })
     .join('')

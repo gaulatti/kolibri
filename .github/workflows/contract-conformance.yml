@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   bleecker-toggle:
-    runs-on: [self-hosted, linux, x64, helix]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

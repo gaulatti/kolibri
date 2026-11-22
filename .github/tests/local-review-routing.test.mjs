@@ -58,3 +58,23 @@ test('local agent installation has its own verification recipe and leaves produc
   assert.equal(config.deployment, null);
   assert.equal(config.local_review.keys[0].github_actor, config.manual_reviewer);
 });
+
+// Clouseau measures the changed-lines baseline in a clean worktree of the base, which has no node_modules,
+// so the recipe must install each package's locked dependencies before its first use, as ci.yml does.
+test('local recipe installs each package with dependencies before using it', () => {
+  const recipe = JSON.parse(readFileSync(new URL('../../.clouseau-local.json', import.meta.url)));
+  const prefixOf = argv => argv[argv.indexOf('--prefix') + 1];
+  const installed = new Set();
+  for (const argv of recipe.verification) {
+    assert.equal(argv[0], 'npm');
+    const prefix = prefixOf(argv);
+    if (argv[1] === 'ci') {
+      installed.add(prefix);
+      continue;
+    }
+    const manifest = JSON.parse(readFileSync(new URL(`../../${prefix}/package.json`, import.meta.url)));
+    const hasDependencies = Object.keys({...manifest.dependencies, ...manifest.devDependencies}).length > 0;
+    if (hasDependencies) assert.ok(installed.has(prefix), `${argv.join(' ')} runs before npm ci --prefix ${prefix}`);
+  }
+  assert.deepEqual([...installed].sort(), ['backend', 'frontend', 'infrastructure']);
+});

@@ -20,9 +20,13 @@ describe("backend deployment logging", () => {
     expect(workflow).not.toContain("BACKEND_LOG_GROUP");
   });
 
-  it("keeps every deployment path behind an explicit manual action", () => {
-    expect(githubWorkflow).toMatch(/on:\s*\n\s+workflow_dispatch:/);
-    expect(githubWorkflow).not.toMatch(/^  push:/m);
+  it("deploys from GitHub only on main for backend changes or by hand, and keeps GitLab manual", () => {
+    // gaulatti/kolibri#19: the Helix pattern deploys on a push to main that touches the backend
+    // (or the workflow itself), and can also be started by hand.
+    expect(githubWorkflow).toMatch(
+      /on:\s*\n\s+push:\s*\n\s+branches: \[main\]\s*\n\s+paths: \['backend\/\*\*', '\.github\/workflows\/backend-deploy\.yml'\]\s*\n\s+workflow_dispatch:/,
+    );
+    expect(githubWorkflow).not.toMatch(/pull_request/);
     expect(gitlabWorkflow.match(/when: manual/g)).toHaveLength(6);
   });
 });

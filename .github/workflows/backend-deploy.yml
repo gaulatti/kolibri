@@ -77,9 +77,11 @@ jobs:
           # Helix's login shell may be fish, so the script runs under sh explicitly. It must
           # contain no single quote.
           script: |
-            export AWS_CREDS="$HOME/.aws"
             sh -c '
             set -eu
+
+            # Set inside sh: the login shell may be fish.
+            AWS_CREDS="$HOME/.aws"
 
             PORT=3190
             NAME=kolibri-backend

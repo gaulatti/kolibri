@@ -6,6 +6,11 @@ jest.mock('@nestjs/core', () => ({
   NestFactory: { create: (...args: unknown[]) => create(...args) },
 }));
 jest.mock('./app.module', () => ({ AppModule: class AppModule {} }));
+const applyProductionEnvironment = jest.fn().mockResolvedValue(undefined);
+jest.mock('./config/production-environment', () => ({
+  applyProductionEnvironment: (...args: unknown[]) =>
+    applyProductionEnvironment(...args),
+}));
 
 describe('bootstrap', () => {
   const saved = { ...process.env };
@@ -18,6 +23,7 @@ describe('bootstrap', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     create.mockResolvedValue(app);
+    applyProductionEnvironment.mockResolvedValue(undefined);
     app.listen.mockResolvedValue(undefined);
     delete process.env.CORS_ALLOWED_ORIGINS;
     delete process.env.PORT;
@@ -50,6 +56,20 @@ describe('bootstrap', () => {
       }),
     );
     expect(app.listen).toHaveBeenCalledWith(3000);
+  });
+
+  it('applies the production settings before the application is created', async () => {
+    const order: string[] = [];
+    applyProductionEnvironment.mockImplementation(() => {
+      order.push('settings');
+      return Promise.resolve();
+    });
+    create.mockImplementation(() => {
+      order.push('create');
+      return Promise.resolve(app);
+    });
+    await boot();
+    expect(order).toEqual(['settings', 'create']);
   });
 
   it('honors configured origins (trimmed, empties dropped) and PORT', async () => {

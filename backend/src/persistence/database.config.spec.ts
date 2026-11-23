@@ -62,16 +62,18 @@ describe('database configuration', () => {
   it('loads PostgreSQL configuration from the runtime system secret', async () => {
     const send = jest.fn().mockResolvedValue({
       SecretString: JSON.stringify({
-        postgresql: {
-          host: 'secret-database.internal',
-          port: 5434,
-          database: 'kolibri_runtime',
-          username: 'kolibri_runtime_user',
-          password: 'runtime-placeholder-not-a-secret',
-          ssl: true,
-          sslRejectUnauthorized: false,
+        'opaque-kolibri-key': {
+          postgresql: {
+            host: 'secret-database.internal',
+            port: 5434,
+            database: 'kolibri_runtime',
+            username: 'kolibri_runtime_user',
+            password: 'runtime-placeholder-not-a-secret',
+            ssl: true,
+            sslRejectUnauthorized: false,
+          },
+          futureConfiguration: { supported: true },
         },
-        futureConfiguration: { supported: true },
       }),
     });
 
@@ -80,7 +82,8 @@ describe('database configuration', () => {
         ...environment,
         NODE_ENV: 'development',
         KOLIBRI_RUNTIME_MODE: 'production',
-        KOLIBRI_STACK_NAME: 'KolibriRuntime',
+        SECRET_ARN: 'arn:aws:secretsmanager:us-east-1:1:secret:shared',
+        UNIQUE_KEY: 'opaque-kolibri-key',
       },
       { send },
     );
@@ -89,7 +92,7 @@ describe('database configuration', () => {
     // Jest's mock call tuple is dynamic; the command itself is asserted above.
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect((send.mock.calls[0][0] as GetSecretValueCommand).input).toEqual({
-      SecretId: 'KolibriRuntime/system',
+      SecretId: 'arn:aws:secretsmanager:us-east-1:1:secret:shared',
     });
     expect(options).toMatchObject({
       host: 'secret-database.internal',
@@ -138,18 +141,25 @@ describe('database configuration', () => {
     });
   });
 
+  // Production reads Kolibri's entry of the shared envelope.
+  const PRODUCTION = {
+    NODE_ENV: 'production',
+    AWS_REGION: 'us-east-1',
+    SECRET_ARN: 'arn:aws:secretsmanager:us-east-1:1:secret:shared',
+    UNIQUE_KEY: 'opaque-kolibri-key',
+  };
+  const entry = (value: unknown): string =>
+    JSON.stringify({ 'opaque-kolibri-key': value });
+
   it('requires the system secret in production', async () => {
     const send = jest.fn().mockResolvedValue({});
     await expect(
-      loadRuntimeDatabaseOptions(
-        { NODE_ENV: 'production', AWS_REGION: 'us-east-1' },
-        { send },
-      ),
+      loadRuntimeDatabaseOptions(PRODUCTION, { send }),
     ).rejects.toThrow('production system configuration is required');
   });
 
   it('rejects missing, malformed, and incomplete production PostgreSQL configuration', async () => {
-    const production = { NODE_ENV: 'production', AWS_REGION: 'us-east-1' };
+    const production = PRODUCTION;
     for (const value of [
       {},
       { postgresql: [] },
@@ -164,9 +174,7 @@ describe('database configuration', () => {
         },
       },
     ]) {
-      const send = jest
-        .fn()
-        .mockResolvedValue({ SecretString: JSON.stringify(value) });
+      const send = jest.fn().mockResolvedValue({ SecretString: entry(value) });
       await expect(
         loadRuntimeDatabaseOptions(production, { send }),
       ).rejects.toThrow();
@@ -175,7 +183,7 @@ describe('database configuration', () => {
 
   it('applies production PostgreSQL scalar defaults', async () => {
     const send = jest.fn().mockResolvedValue({
-      SecretString: JSON.stringify({
+      SecretString: entry({
         postgresql: {
           host: 'db',
           database: 'kolibri',
@@ -185,13 +193,13 @@ describe('database configuration', () => {
       }),
     });
     await expect(
-      loadRuntimeDatabaseOptions({ NODE_ENV: 'production' }, { send }),
+      loadRuntimeDatabaseOptions(PRODUCTION, { send }),
     ).resolves.toMatchObject({ port: 5432, ssl: false });
   });
 
   it('accepts trimmed string PostgreSQL scalar settings', async () => {
     const send = jest.fn().mockResolvedValue({
-      SecretString: JSON.stringify({
+      SecretString: entry({
         postgresql: {
           host: 'db',
           port: '5435',
@@ -203,7 +211,7 @@ describe('database configuration', () => {
       }),
     });
     await expect(
-      loadRuntimeDatabaseOptions({ NODE_ENV: 'production' }, { send }),
+      loadRuntimeDatabaseOptions(PRODUCTION, { send }),
     ).resolves.toMatchObject({ port: 5435 });
   });
 });

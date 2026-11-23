@@ -47,22 +47,26 @@ describe('AppModule dependency graph', () => {
     await moduleRef.close();
   });
 
-  it('compiles in production mode, selecting the AWS-backed providers from the system secret', async () => {
+  it('compiles in production mode, selecting the AWS-backed providers from the envelope entry', async () => {
     process.env.KOLIBRI_RUNTIME_MODE = 'production';
+    process.env.SECRET_ARN = 'arn:aws:secretsmanager:us-east-1:1:secret:shared';
+    process.env.UNIQUE_KEY = 'opaque-kolibri-key';
     const send = jest
       .spyOn(SecretsManagerClient.prototype, 'send')
       .mockResolvedValue({
         SecretString: JSON.stringify({
-          postgresql: {
-            host: 'db.internal',
-            database: 'kolibri',
-            username: 'kolibri',
-            password: 'unit-test-only',
-          },
-          storage: {
-            driver: 's3',
-            bucket: 'unit-test-bucket',
-            presignedUrlTtlSeconds: 300,
+          'opaque-kolibri-key': {
+            postgresql: {
+              host: 'db.internal',
+              database: 'kolibri',
+              username: 'kolibri',
+              password: 'unit-test-only',
+            },
+            storage: {
+              driver: 's3',
+              bucket: 'unit-test-bucket',
+              presignedUrlTtlSeconds: 300,
+            },
           },
         }),
       } as never);

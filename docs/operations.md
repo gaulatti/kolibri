@@ -1,3 +1,5 @@
+> **Backend deployment moved (gaulatti/kolibri#19).** The backend deploys on Helix through GHCR and the shared Secrets Manager envelope; see [`infrastructure/README.md`](../infrastructure/README.md). The ECR, AWS key pair, CDK system secret and `KOLIBRI_STACK_NAME`-derived system secret described below for the backend no longer apply; the frontend, Cognito and S3 parts below are unchanged until their own tickets.
+
 # Operations and deployment
 
 > **Generation preflight:** the saved Figma source must first pass the

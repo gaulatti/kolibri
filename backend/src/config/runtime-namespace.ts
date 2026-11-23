@@ -13,12 +13,6 @@ export function runtimeNamespace(
   return value;
 }
 
-export function systemSecretName(
-  environment: NodeJS.ProcessEnv = process.env,
-): string {
-  return `${runtimeNamespace(environment)}/system`;
-}
-
 export function designSystemRuntimeSecretName(
   environment: NodeJS.ProcessEnv = process.env,
 ): string {

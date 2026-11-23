@@ -1,9 +1,12 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { applyProductionEnvironment } from './config/production-environment';
 import { createGlobalValidationPipe } from './common/validation/global-validation.pipe';
 
 async function bootstrap(): Promise<void> {
+  // Production settings come from the secret envelope before any module reads the environment.
+  await applyProductionEnvironment();
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(createGlobalValidationPipe());
   const allowedOrigins = (

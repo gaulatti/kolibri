@@ -230,7 +230,7 @@ checkout is not an active application database.
 The stack name is the namespace:
 
 ```text
-<KOLIBRI_STACK_NAME>/system
+(Kolibri's entry of the shared Secrets Manager envelope, SECRET_ARN + UNIQUE_KEY)
 <KOLIBRI_STACK_NAME>/runtime/design-systems
 <KOLIBRI_STACK_NAME>/runs/<run-id>/...
 ```

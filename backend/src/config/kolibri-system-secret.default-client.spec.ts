@@ -7,9 +7,15 @@ describe('Kolibri system secret default client', () => {
   it('builds a Secrets Manager client for the configured region when none is injected', async () => {
     const send = jest
       .spyOn(SecretsManagerClient.prototype, 'send')
-      .mockResolvedValue({ SecretString: '{"postgresql":{}}' } as never);
+      .mockResolvedValue({
+        SecretString: '{"key":{"postgresql":{}}}',
+      } as never);
     await expect(
-      loadKolibriSystemSecret({ AWS_REGION: 'us-east-1' }),
+      loadKolibriSystemSecret({
+        AWS_REGION: 'us-east-1',
+        SECRET_ARN: 'arn:test',
+        UNIQUE_KEY: 'key',
+      }),
     ).resolves.toEqual({ postgresql: {} });
     expect(send).toHaveBeenCalledTimes(1);
   });

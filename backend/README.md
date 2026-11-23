@@ -130,25 +130,28 @@ The backend accepts only these runtime environment variables:
 | Variable                | Required in production | Source                                                                                                                                                          |
 | ----------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `PORT`                  | Yes                    | On-premises runtime setting.                                                                                                                                    |
-| `CORS_ALLOWED_ORIGINS`  | Yes                    | Comma-separated canonical frontend origins.                                                                                                                     |
-| `AWS_REGION`            | Yes                    | `AwsRegion` CDK output.                                                                                                                                         |
-| `COGNITO_USER_POOL_ID`  | Yes                    | `CognitoUserPoolId` CDK output.                                                                                                                                 |
-| `COGNITO_APP_CLIENT_ID` | Yes                    | `FrontendCognitoClientId` CDK output.                                                                                                                           |
-| `KOLIBRI_STACK_NAME`    | Yes                    | `KolibriStackName` CDK output.                                                                                                                                  |
+| `CORS_ALLOWED_ORIGINS`  | From the entry         | Set from `cors.allowedOrigins` of the envelope entry in production; comma-separated origins locally.                                                            |
+| `AWS_REGION`            | Yes                    | Repository variable `AWS_REGION`, passed to the container.                                                                                                      |
+| `COGNITO_USER_POOL_ID`  | From the entry         | Set from `cognito.userPoolId` of the envelope entry in production.                                                                                              |
+| `COGNITO_APP_CLIENT_ID` | From the entry         | Set from `cognito.appClientId` of the envelope entry in production.                                                                                             |
+| `SECRET_ARN`            | Yes                    | The shared Secrets Manager envelope (repository secret).                                                                                                        |
+| `UNIQUE_KEY`            | Yes                    | The opaque key of Kolibri's entry in that envelope (repository secret).                                                                                         |
+| `KOLIBRI_STACK_NAME`    | No                     | Optional namespace for the Design System runtime secret and the S3 key prefix; default `kolibri`.                                                               |
 | `KOLIBRI_RUNTIME_MODE`  | No                     | `local` or `production`. Unset defaults from `NODE_ENV`; set `production` to exercise PostgreSQL, Secrets Manager, and S3 while running the development server. |
-| `DATABASE_*`            | No                     | Optional local-only PostgreSQL overrides for commands run outside Compose. Production reads the connection exclusively from the system secret.                  |
+| `DATABASE_*`            | No                     | Optional local-only PostgreSQL overrides for commands run outside Compose. Production reads the connection exclusively from Kolibri's envelope entry.                  |
 
 AWS credentials are not application environment variables. The AWS SDK uses its
 standard credential provider chain. The production container mounts the
 on-premises deployment user's `~/.aws` directory read-only at
-`/home/node/.aws`; the default profile in that directory must identify the
-CDK-created backend runtime user.
+`/home/node/.aws`; the default profile in that directory must identify an AWS user that may read
+the shared envelope and the Design System runtime secret and use the artifact bucket.
 
 There are deliberately no `DATABASE_*`, `STORAGE_*`, Figma-token, JWT, Google,
 or AWS access-key variables in `backend/.env.example`. Production PostgreSQL and
-storage settings are read from `<KOLIBRI_STACK_NAME>/system`. All design-system
-runtime configuration lives in the single CDK-created
-`<KOLIBRI_STACK_NAME>/runtime/design-systems` secret.
+storage settings are read from Kolibri's entry of the shared Secrets Manager
+envelope (`SECRET_ARN`, `UNIQUE_KEY`; see `infrastructure/README.md`). All design-system
+runtime configuration lives in the single
+`<KOLIBRI_STACK_NAME or kolibri>/runtime/design-systems` secret.
 
 The persistence boundary is invariant: TypeORM application entities always use
 PostgreSQL. A local `kolibri.sqlite` file is a legacy artifact from an older

@@ -4,8 +4,11 @@
   "readme": "README.md",
   "repository_policy": ".github/clouseau.md",
   "verification": [
+    ["npm", "ci", "--prefix", "backend"],
     ["npm", "run", "build", "--prefix", "backend"],
+    ["npm", "ci", "--prefix", "frontend"],
     ["npm", "run", "typecheck", "--prefix", "frontend"],
+    ["npm", "ci", "--prefix", "infrastructure"],
     ["npm", "test", "--prefix", "infrastructure"],
     ["npm", "test", "--prefix", "contract"],
     ["npm", "run", "test:coverage", "--prefix", "backend"]
